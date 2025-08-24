@@ -2,6 +2,8 @@
 #include <vector>
 // Include the PNG decoder library
 #include <PNGdec.h>
+#include "PNG_support.h"
+
 
 PNG png;
 #define MAX_IMAGE_WIDTH 240 // Adjust for your images
@@ -13,7 +15,6 @@ int16_t ypos = 0;
 #include "SPI.h"
 #include <TFT_eSPI.h>              // Hardware-specific library
 TFT_eSPI tft = TFT_eSPI();         // Invoke custom library
-
 
 short imageNum = 0;
 
@@ -65,7 +66,7 @@ void loop() {
 }
 
 void showPng(char *filepath){
-    int16_t rc = png.open(filepath, pngOpen, pngClose, pngRead, pngSeek, pngDraw);
+    int16_t rc = png.open(filepath, &pngOpen, pngClose, pngRead, pngSeek, pngDraw);
     if (rc == PNG_SUCCESS) {
         tft.startWrite();
         // Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
@@ -110,29 +111,3 @@ int pngDraw(PNGDRAW *pDraw) {
   return 1;
 }
 
-
-File pngfile;
-
-void * pngOpen(const char *filename, int32_t *size) {
-  Serial.printf("Attempting to open %s\n", filename);
-  pngfile = LittleFS.open(filename, "r");
-  *size = pngfile.size();
-  return &pngfile;
-}
-
-void pngClose(void *handle) {
-  File pngfile = *((File*)handle);
-  if (pngfile) pngfile.close();
-}
-
-int32_t pngRead(PNGFILE *page, uint8_t *buffer, int32_t length) {
-  if (!pngfile) return 0;
-  page = page; // Avoid warning
-  return pngfile.read(buffer, length);
-}
-
-int32_t pngSeek(PNGFILE *page, int32_t position) {
-  if (!pngfile) return 0;
-  page = page; // Avoid warning
-  return pngfile.seek(position);
-}

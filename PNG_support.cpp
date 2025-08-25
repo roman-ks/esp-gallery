@@ -1,6 +1,5 @@
 #include "PNG_support.h"
 
-
 // Here are the callback functions that the decPNG library
 // will use to open files, fetch data and close the file.
 

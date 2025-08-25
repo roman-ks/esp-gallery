@@ -3,6 +3,7 @@
 // Include the PNG decoder library
 #include <PNGdec.h>
 #include "PNG_support.h"
+#include "thumbnail_utils.h"
 
 
 PNG png;
@@ -66,48 +67,25 @@ void loop() {
 }
 
 void showPng(char *filepath){
-    int16_t rc = png.open(filepath, &pngOpen, pngClose, pngRead, pngSeek, pngDraw);
-    if (rc == PNG_SUCCESS) {
-        tft.startWrite();
-        // Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
-        uint32_t dt = millis();
-        if (png.getWidth() > MAX_IMAGE_WIDTH) {
-          Serial.println("Image too wide for allocated line buffer size!");
-        } else {
-          rc = png.decode(NULL, 0);
-          png.close();
-        }
-        tft.endWrite();
-        // How long did rendering take...
-        // Serial.print(millis()-dt); Serial.println("ms");
-      }
+  IMG_HOLDER imageHolder = readPngIntoArray(filepath);
+  tft.startWrite();
+  tft.pushImage(0,0, imageHolder.width, imageHolder.height, imageHolder.imageBytes);
+  tft.endWrite();
+  Serial.println("Finished drawing");
+  free(imageHolder.imageBytes);
+  Serial.println("Freed buffer");
 }
 
 // default to HIGH
-int oldButtonState=1;
+int oldButtonState=HIGH;
 
 bool isButtonPressed(){
   int buttonState = digitalRead(5);
   bool pressed = false;
-  if(oldButtonState==1 && buttonState == 0){
+  if(oldButtonState==HIGH && buttonState == LOW){
     pressed = true;
   }
   oldButtonState = buttonState;
   return pressed;
-}
-
-
-//=========================================v==========================================
-//                                      pngDraw
-//====================================================================================
-// This next function will be called during decoding of the png file to
-// render each image line to the TFT.  If you use a different TFT library
-// you will need to adapt this function to suit.
-// Callback function to draw pixels to the display
-int pngDraw(PNGDRAW *pDraw) {
-  uint16_t lineBuffer[MAX_IMAGE_WIDTH];
-  png.getLineAsRGB565(pDraw, lineBuffer, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
-  tft.pushImage(xpos, ypos + pDraw->y, pDraw->iWidth, 1, lineBuffer);
-  return 1;
 }
 

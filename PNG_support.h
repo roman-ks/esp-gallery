@@ -3,6 +3,7 @@
 
 #include "LittleFS.h"
 #include <PNGdec.h>
+#include <Arduino.h>
 
 void * pngOpen(const char *filename, int32_t *size);
 

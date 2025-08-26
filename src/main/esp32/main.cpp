@@ -82,16 +82,10 @@ void showPng(char *filepath){
   Serial.printf("Nearest neighbour thumbnail created in %f ms\n", (micros()-start)/1000.0f);
 
   tft.startWrite();
-  tft.pushImage(0,0, thumbnailHolder.width, thumbnailHolder.height, thumbnailHolder.imageBytes);
-  tft.pushImage(0,80, fThumbnailHolder.width, fThumbnailHolder.height, fThumbnailHolder.imageBytes);
-  tft.pushImage(0,160, nThumbnailHolder.width, nThumbnailHolder.height, nThumbnailHolder.imageBytes);
-
-
+  tft.pushImage(0,0, nThumbnailHolder.width, nThumbnailHolder.height, nThumbnailHolder.imageBytes);
   tft.endWrite();
   Serial.println("Finished drawing");
   free(imageHolder.imageBytes);
-  // free(thumbnailHolder.imageBytes);
-  // free(fThumbnailHolder.imageBytes);
   free(nThumbnailHolder.imageBytes);
   Serial.println("Freed buffer");
 }

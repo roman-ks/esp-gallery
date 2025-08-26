@@ -82,16 +82,13 @@ void writeImageToPng(const std::string& filename, int width, int height, const u
 
 int main()
 {
-    std::vector<uint16_t> arr = readBase64FileToUint16Array("resources/base64_img.txt");
+    std::vector<uint16_t> arr = readBase64FileToUint16Array("resources/base64_tn.txt");
     std::cout << "Decoded array size: " << arr.size() << std::endl;
-    if (!arr.empty()) {
-        std::cout << "First value: " << arr[0] << std::endl;
-    }
 
-    IMG_HOLDER testImg{240, 240, arr.data()};
-    createThumbnailNearest(&testImg);
+    IMG_HOLDER testImg{80, 80, arr.data()};
+    // IMG_HOLDER tnImg = createThumbnailFloat(&testImg);
 
-    writeImageToPng("output.png", testImg.width, testImg.height, testImg.imageBytes);
+    writeImageToPng("output_tn.png", testImg.width, testImg.height, testImg.imageBytes);
     std::cout << "Press Enter to exit..." << std::endl;
     std::cin.get(); // <-- Add this line
     return 0;

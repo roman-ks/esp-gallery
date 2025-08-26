@@ -76,28 +76,14 @@ void showPng(char *filepath){
   unsigned long start = micros();
   IMG_HOLDER imageHolder = readPngIntoArray(filepath);
   Serial.printf("Read original img in %f ms\n", (micros()-start)/1000.0f);
-  // unsigned char* encoded = encodeBase64((uint8_t*)imageHolder.imageBytes, imageHolder.width*imageHolder.height*sizeof(uint16_t));
-  // Serial.println("Wrinting original image base64");
-  // Serial.println((char*)encoded);
-  // free(encoded);
-  // start = micros();
-  // IMG_HOLDER thumbnailHolder = createThumbnail(&imageHolder);
-  // Serial.printf("Int thumbnail created in %f ms\n", (micros()-start)/1000.0f);
 
-  // start = micros();
-  // IMG_HOLDER fThumbnailHolder = createThumbnailFloat(&imageHolder);
-  // Serial.printf("float thumbnail created in %f ms\n", (micros()-start)/1000.0f);
-
-  IMG_HOLDER nThumbnailHolder = createThumbnailFloat(&imageHolder);
+  start = micros();
+  IMG_HOLDER nThumbnailHolder = createThumbnailNearest(&imageHolder);
   Serial.printf("Nearest neighbour thumbnail created in %f ms\n", (micros()-start)/1000.0f);
-  // encoded = encodeBase64((uint8_t*)nThumbnailHolder.imageBytes, nThumbnailHolder.width*nThumbnailHolder.height*sizeof(uint16_t));
-  // Serial.println("Wrinting nearest neighbours image base64");
-  // Serial.println((char*)encoded);
-  // free(encoded);
 
   tft.startWrite();
-  // tft.pushImage(0,0, thumbnailHolder.width, thumbnailHolder.height, thumbnailHolder.imageBytes);
-  // tft.pushImage(0,80, fThumbnailHolder.width, fThumbnailHolder.height, fThumbnailHolder.imageBytes);
+  tft.pushImage(0,0, thumbnailHolder.width, thumbnailHolder.height, thumbnailHolder.imageBytes);
+  tft.pushImage(0,80, fThumbnailHolder.width, fThumbnailHolder.height, fThumbnailHolder.imageBytes);
   tft.pushImage(0,160, nThumbnailHolder.width, nThumbnailHolder.height, nThumbnailHolder.imageBytes);
 
 

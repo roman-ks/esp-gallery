@@ -4,9 +4,9 @@
 #include <string>
 #include <algorithm>
 #include <cstdint>
-#include "../downscale_utils.h"
+#include "../../main/core/downscale_utils.h"
+#include "../../../libs/stb/stb_image_write.h"
 
-#define LOCAL_TESTING
 
 // Simple base64 decoding table
 static const int B64index[256] = {
@@ -54,27 +54,45 @@ std::vector<uint16_t> readBase64FileToUint16Array(const std::string& filename) {
     // Decode base64
     std::vector<uint8_t> decodedBytes = base64_decode(base64);
 
-    // Convert to uint16_t array (little-endian)
+    // Convert to uint16_t array (big-endian)
     if (decodedBytes.size() % 2 != 0) {
         std::cerr << "Decoded data length is not a multiple of 2!" << std::endl;
         return {};
     }
     std::vector<uint16_t> result(decodedBytes.size() / 2);
     for (size_t i = 0; i < result.size(); ++i) {
-        result[i] = decodedBytes[2 * i] | (decodedBytes[2 * i + 1] << 8);
+        result[i] = decodedBytes[2 * i] << 8 | (decodedBytes[2 * i + 1]);
     }
     return result;
 }
 
-// Example usage
+void writeImageToPng(const std::string& filename, int width, int height, const uint16_t* data) {
+    // Note: data is in RGB565 format, we need to convert it to RGB888 for PNG
+    std::vector<uint8_t> rgb888(width * height * 3);
+    for (int i = 0; i < width * height; ++i) {
+        uint16_t pixel = data[i];
+        uint8_t r8, g8, b8;
+        convertRgb565ToRgb888(pixel, r8, g8, b8);
+        rgb888[3 * i] = r8;
+        rgb888[3 * i + 1] = g8;
+        rgb888[3 * i + 2] = b8;
+    }
+    stbi_write_png(filename.c_str(), width, height, 3, rgb888.data(), width * 3);
+}
+
 int main()
 {
-    std::vector<uint16_t> arr = readBase64FileToUint16Array("test/resources/base64_img.txt");
+    std::vector<uint16_t> arr = readBase64FileToUint16Array("resources/base64_img.txt");
     std::cout << "Decoded array size: " << arr.size() << std::endl;
     if (!arr.empty()) {
         std::cout << "First value: " << arr[0] << std::endl;
     }
 
-    createThumbnailNearest(new IMG_HOLDER{240, 240, arr.data()});
+    IMG_HOLDER testImg{240, 240, arr.data()};
+    createThumbnailNearest(&testImg);
+
+    writeImageToPng("output.png", testImg.width, testImg.height, testImg.imageBytes);
+    std::cout << "Press Enter to exit..." << std::endl;
+    std::cin.get(); // <-- Add this line
     return 0;
 }

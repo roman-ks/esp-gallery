@@ -14,6 +14,26 @@ float removeGammaCorrectionFloat(float channel);
 float applyGammaCorrectionFloat(float channel);
 
 
+void convertRgb565ToRgb888(uint16_t rgb565, uint8_t &r, uint8_t &g, uint8_t &b) {
+    uint8_t imgRed5 = (rgb565 >> 11) & 0x1F;
+    uint8_t imgGreen6 = (rgb565 >> 5) & 0x3F;
+    uint8_t imgBlue5 = rgb565 & 0x1F;
+
+    // Scale to 8 bits
+    r = (imgRed5 << 3) | (imgRed5 >> 2);
+    g = (imgGreen6 << 2) | (imgGreen6 >> 4);
+    b = (imgBlue5 << 3) | (imgBlue5 >> 2);
+}
+
+uint16_t convertRgb888ToRgb565(uint8_t r, uint8_t g, uint8_t b) {
+    // Scale down to 5/6 bits
+    uint8_t r5 = (r * 31 + 127) / 255;
+    uint8_t g6 = (g * 63 + 127) / 255;
+    uint8_t b5 = (b * 31 + 127) / 255;
+
+    return (r5 << 11) | (g6 << 5) | b5;
+}
+
 IMG_HOLDER createThumbnail(IMG_HOLDER *imgHolder){
   // calc thumbnali width and heighth
   int tnW = imgHolder->width / THUMBNAIL_WIDTH_SCALE_FACTOR;
@@ -35,14 +55,9 @@ IMG_HOLDER createThumbnail(IMG_HOLDER *imgHolder){
           uint16_t imgX = j*THUMBNAIL_WIDTH_SCALE_FACTOR + k;
           uint16_t imgY = i*THUMBNAIL_HEIGHT_SCALE_FACTOR + n;
           uint16_t imgColors =  imgBytes[imgY*imgHolder->width + imgX];
-          uint8_t imgRed5 = (imgColors >> 11) & 0x1F;
-          uint8_t imgGreen6 = (imgColors >> 5) & 0x3F;
-          uint8_t imgBlue5 = imgColors & 0x1F;
 
-          // Scale to 8 bits
-          uint8_t imgRed8 = (imgRed5 << 3) | (imgRed5 >> 2);
-          uint8_t imgGreen8 = (imgGreen6 << 2) | (imgGreen6 >> 4);
-          uint8_t imgBlue8 = (imgBlue5 << 3) | (imgBlue5 >> 2);
+          uint8_t imgRed8, imgGreen8, imgBlue8;
+          convertRgb565ToRgb888(imgColors, imgRed8, imgGreen8, imgBlue8);
 
           tnRedSum8 += removeGammaCorrection(imgRed8);
           tnGreenSum8 += removeGammaCorrection(imgGreen8);
@@ -55,12 +70,7 @@ IMG_HOLDER createThumbnail(IMG_HOLDER *imgHolder){
       uint8_t tnBlueAvg8 = applyGammaCorrection(tnBlueSum8 / BLOCK_SIZE);
 
       // Scale back to 5/6 bits
-      uint8_t tnRed5 = (tnRedAvg8 * 31 + 127) / 255;
-      uint8_t tnGreen6 = (tnGreenAvg8 * 63 + 127) / 255;
-      uint8_t tnBlue5 = (tnBlueAvg8 * 31 + 127) / 255;
-
-      uint16_t tnColors = (tnRed5 << 11) | (tnGreen6 << 5) | tnBlue5;
-      tnBytes[i*tnW + j] = tnColors;
+      tnBytes[i*tnW + j] = convertRgb888ToRgb565(tnRedAvg8, tnGreenAvg8, tnBlueAvg8);
     }
   }
 
@@ -100,14 +110,8 @@ IMG_HOLDER createThumbnailFloat(IMG_HOLDER *imgHolder){
           uint16_t imgX = j*THUMBNAIL_WIDTH_SCALE_FACTOR + k;
           uint16_t imgY = i*THUMBNAIL_HEIGHT_SCALE_FACTOR + n;
           uint16_t imgColors =  imgBytes[imgY*imgHolder->width + imgX];
-          uint8_t imgRed5 = (imgColors >> 11) & 0x1F;
-          uint8_t imgGreen6 = (imgColors >> 5) & 0x3F;
-          uint8_t imgBlue5 = imgColors & 0x1F;
-
-          // Scale to 8 bits
-          float imgRed8 = (imgRed5 << 3) | (imgRed5 >> 2);
-          float imgGreen8 = (imgGreen6 << 2) | (imgGreen6 >> 4);
-          float imgBlue8 = (imgBlue5 << 3) | (imgBlue5 >> 2);
+          uint8_t imgRed8, imgGreen8, imgBlue8;
+          convertRgb565ToRgb888(imgColors, imgRed8, imgGreen8, imgBlue8);
 
           // Normalize to [0,1]
           float r = imgRed8 / 255.0f;
@@ -141,12 +145,7 @@ IMG_HOLDER createThumbnailFloat(IMG_HOLDER *imgHolder){
       uint8_t tnBlue8 = (uint8_t)(bAvg * 255.0f + 0.5f);
 
       // Scale to 5/6 bits
-      uint8_t tnRed5 = (tnRed8 * 31 + 127) / 255;
-      uint8_t tnGreen6 = (tnGreen8 * 63 + 127) / 255;
-      uint8_t tnBlue5 = (tnBlue8 * 31 + 127) / 255;
-
-      uint16_t tnColors = (tnRed5 << 11) | (tnGreen6 << 5) | tnBlue5;
-      tnBytes[i*tnW + j] = tnColors;
+      tnBytes[i*tnW + j] = convertRgb888ToRgb565(tnRed8, tnGreen8, tnBlue8);
     }
   }
 

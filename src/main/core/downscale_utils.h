@@ -2,9 +2,7 @@
 #define __DOWNSCALE_UTILS_H__
 #include "img_holder.h"
 #include <cstdint>
-
-#define THUMBNAIL_WIDTH_SCALE_FACTOR 3
-#define THUMBNAIL_HEIGHT_SCALE_FACTOR 3
+#include "../core/configs.h"
 
 #define MAX_IMAGE_WIDTH 240
 #define MAX_IMAGE_HEIGHT 320

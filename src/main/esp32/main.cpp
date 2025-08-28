@@ -1,18 +1,10 @@
 #include "main.h"
 #include "LittleFS.h"
 #include <vector>
-// Include the PNG decoder library
 #include "PNG_support.h"
 #include "thumbnail_utils.h"
 #include "mbedtls/base64.h"
-
-#define GRID_ELEMENT_HEIGHT 80
-#define GRID_ELEMENT_WIDTH 80
-
-#define MAX_IMAGE_WIDTH 240 // Adjust for your images
-
-int16_t xpos = 0;
-int16_t ypos = 0;
+#include "../core/configs.h"
 
 // Include the TFT library https://github.com/Bodmer/TFT_eSPI
 #include "SPI.h"
@@ -21,11 +13,18 @@ TFT_eSPI tft = TFT_eSPI();         // Invoke custom library
 
 short imageNum = 0;
 std::vector<char*> images;
+uint8_t highlightIndex = 0;
 
 void showPng(IMG_HOLDER imgHolder, uint16_t x, uint16_t y);
 bool isButtonPressed();
 unsigned char* encodeBase64(const uint8_t *input, size_t len);
 void showThumbnails(std::vector<char*> thumbnailPaths);
+void showThumbnail(int index);
+void showThumbnail(char* tnPath, int x, int y);
+void goToNextHighlightBox();
+void drawHighlightBox();
+uint8_t getBoxX(int i);
+uint8_t getBoxY(int i);
 
 void setup() {
   pinMode(5, INPUT_PULLUP);
@@ -57,45 +56,85 @@ void setup() {
   tft.begin();
   tft.fillScreen(TFT_BLACK);
 
+  Serial.printf("Max cols: %d, max rows: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS);
+
   Serial.println("\r\nInitialisation done.");
   showThumbnails(images);
+  drawHighlightBox();
 }
 
 void showThumbnails(std::vector<char*> thumbnailPaths){
   unsigned long start = micros();
-  int x=0, y=0;
-  for(auto tnPath: thumbnailPaths){
+  int thumbnailX=0, thumbnailY=0;
+  for (size_t i = 0; i < thumbnailPaths.size(); i++){
+    showThumbnail(i);
+  }
+  Serial.printf("Showing %d thumbnails\n", thumbnailPaths.size());
+
+}
+
+uint8_t getBoxX(int i){
+  return (i % GRID_MAX_COLS) * GRID_ELEMENT_WIDTH;
+}
+
+uint8_t getBoxY(int i){
+  return (i / GRID_MAX_COLS) * GRID_ELEMENT_HEIGHT;
+}
+
+void showThumbnail(int i){
+  showThumbnail(images[i], getBoxX(i), getBoxY(i));
+}
+
+void showThumbnail(char* tnPath, int x, int y){
     Serial.printf("Creating thumbnail for %s\n", tnPath);
     IMG_HOLDER imageHolder = readPngIntoArray(tnPath);
     IMG_HOLDER thumbnailHolder = createThumbnailNearest(&imageHolder);
     free(imageHolder.imageBytes);
     showPng(thumbnailHolder, x, y);
-    x += GRID_ELEMENT_WIDTH;
-    if (x + GRID_ELEMENT_WIDTH > tft.width()){
-      x = 0;
-      y += GRID_ELEMENT_HEIGHT;
-      if( y + GRID_ELEMENT_HEIGHT>tft.height())
-        break;
-    }
-  }
-  Serial.printf("Showing %d thumbnails\n", thumbnailPaths.size());
-
 }
  
 void loop() {
 
   if(isButtonPressed()){
-    imageNum++;
-    if(imageNum>=images.size())
-      imageNum=0;
-    tft.fillScreen(0x00);
-    showPng(readPngIntoArray(images[imageNum]), 0, 0);
-    Serial.printf("Showing image #%d: %s\n", imageNum, images[imageNum]);
+    tft.fillRect(getBoxX(highlightIndex), getBoxY(highlightIndex), GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT, TFT_BLACK);
+    showThumbnail(highlightIndex);
+    goToNextHighlightBox();
+    drawHighlightBox();
+    // imageNum++;
+    // if(imageNum>=images.size())
+    //   imageNum=0;
+    // tft.fillScreen(0x00);
+    // showPng(readPngIntoArray(images[imageNum]), 0, 0);
+    // Serial.printf("Showing image #%d: %s\n", imageNum, images[imageNum]);
 
   }
   delay(100);
 
 }
+
+void goToNextHighlightBox(){
+  highlightIndex++;
+  Serial.printf("Hl index %d\n", highlightIndex);
+ 
+  
+  if(highlightIndex >= images.size()){
+    Serial.println("Resetting highlight index");
+    highlightIndex=0;
+  }
+}
+
+void drawHighlightBox(){
+  int8_t thickness = 2;
+  uint8_t highlighX = getBoxX(highlightIndex);
+  uint8_t highlighY = getBoxY(highlightIndex);
+  // vertical lines
+  tft.fillRect(highlighX, highlighY, thickness, GRID_ELEMENT_HEIGHT, TFT_BLUE);  
+  tft.fillRect(highlighX+GRID_ELEMENT_WIDTH-thickness, highlighY, thickness, GRID_ELEMENT_HEIGHT, TFT_BLUE);
+  // horizontal lines
+  tft.fillRect(highlighX+thickness, highlighY, GRID_ELEMENT_WIDTH-2*thickness, thickness, TFT_BLUE);  
+  tft.fillRect(highlighX+thickness, highlighY+GRID_ELEMENT_HEIGHT-thickness, GRID_ELEMENT_WIDTH-2*thickness, thickness, TFT_BLUE);
+}
+
 
 void showPng(IMG_HOLDER imageHolder, uint16_t x, uint16_t y){
   unsigned long start = micros();

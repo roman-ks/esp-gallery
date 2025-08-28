@@ -2,13 +2,13 @@
 #include "LittleFS.h"
 #include <vector>
 // Include the PNG decoder library
-#include <PNGdec.h>
 #include "PNG_support.h"
 #include "thumbnail_utils.h"
 #include "mbedtls/base64.h"
 
+#define GRID_ELEMENT_HEIGHT 80
+#define GRID_ELEMENT_WIDTH 80
 
-PNG png;
 #define MAX_IMAGE_WIDTH 240 // Adjust for your images
 
 int16_t xpos = 0;
@@ -22,14 +22,20 @@ TFT_eSPI tft = TFT_eSPI();         // Invoke custom library
 short imageNum = 0;
 std::vector<char*> images;
 
-void showPng(char *filepath);
+void showPng(IMG_HOLDER imgHolder, uint16_t x, uint16_t y);
 bool isButtonPressed();
 unsigned char* encodeBase64(const uint8_t *input, size_t len);
+void showThumbnails(std::vector<char*> thumbnailPaths);
 
 void setup() {
   pinMode(5, INPUT_PULLUP);
 
   Serial.begin(115200);
+
+  if(!psramFound()){
+    Serial.println("PSRAM not found!");
+    while(0);
+  }
 
   if(!LittleFS.begin()){
     Serial.println("An Error has occurred while mounting LittleFS");
@@ -52,9 +58,28 @@ void setup() {
   tft.fillScreen(TFT_BLACK);
 
   Serial.println("\r\nInitialisation done.");
-  
-  showPng(images[imageNum]);
-  Serial.printf("Showing image #%d: %s\n", imageNum, images[imageNum]);
+  showThumbnails(images);
+}
+
+void showThumbnails(std::vector<char*> thumbnailPaths){
+  unsigned long start = micros();
+  int x=0, y=0;
+  for(auto tnPath: thumbnailPaths){
+    Serial.printf("Creating thumbnail for %s\n", tnPath);
+    IMG_HOLDER imageHolder = readPngIntoArray(tnPath);
+    IMG_HOLDER thumbnailHolder = createThumbnailNearest(&imageHolder);
+    free(imageHolder.imageBytes);
+    showPng(thumbnailHolder, x, y);
+    x += GRID_ELEMENT_WIDTH;
+    if (x + GRID_ELEMENT_WIDTH > tft.width()){
+      x = 0;
+      y += GRID_ELEMENT_HEIGHT;
+      if( y + GRID_ELEMENT_HEIGHT>tft.height())
+        break;
+    }
+  }
+  Serial.printf("Showing %d thumbnails\n", thumbnailPaths.size());
+
 }
  
 void loop() {
@@ -64,7 +89,7 @@ void loop() {
     if(imageNum>=images.size())
       imageNum=0;
     tft.fillScreen(0x00);
-    showPng(images[imageNum]);
+    showPng(readPngIntoArray(images[imageNum]), 0, 0);
     Serial.printf("Showing image #%d: %s\n", imageNum, images[imageNum]);
 
   }
@@ -72,21 +97,13 @@ void loop() {
 
 }
 
-void showPng(char *filepath){
+void showPng(IMG_HOLDER imageHolder, uint16_t x, uint16_t y){
   unsigned long start = micros();
-  IMG_HOLDER imageHolder = readPngIntoArray(filepath);
-  Serial.printf("Read original img in %f ms\n", (micros()-start)/1000.0f);
-
-  start = micros();
-  IMG_HOLDER nThumbnailHolder = createThumbnailNearest(&imageHolder);
-  Serial.printf("Nearest neighbour thumbnail created in %f ms\n", (micros()-start)/1000.0f);
-
   tft.startWrite();
-  tft.pushImage(0,0, nThumbnailHolder.width, nThumbnailHolder.height, nThumbnailHolder.imageBytes);
+  tft.pushImage(x,y, imageHolder.width, imageHolder.height, imageHolder.imageBytes);
   tft.endWrite();
   Serial.println("Finished drawing");
   free(imageHolder.imageBytes);
-  free(nThumbnailHolder.imageBytes);
   Serial.println("Freed buffer");
 }
 

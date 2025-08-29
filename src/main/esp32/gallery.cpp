@@ -27,16 +27,43 @@ void Gallery::init() {
     drawHighlightBox();
 }
 
-void Gallery::hightlightNext() {
+void Gallery::nextImage(){
+    // todo move to some util
+    imageIndex++;
+    if(imageIndex >= images.size()){
+        imageIndex = 0;
+    }
+    tft.fillScreen(TFT_BLACK);
+    showPng(readPngIntoArray(images[imageIndex]), 0, 0);
+}
+
+void Gallery::nextHighlight(){
     tft.fillRect(getBoxX(highlightIndex), getBoxY(highlightIndex), GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT, TFT_BLACK);
     showThumbnail(highlightIndex);
     goToNextHighlightBox();
     drawHighlightBox();
 }
 
+bool Gallery::isImageOpen(){
+    return imageIndex >= 0;
+}
+
+void Gallery::openImage(){
+    imageIndex = highlightIndex;
+    tft.fillScreen(TFT_BLACK);
+    showPng(readPngIntoArray(images[imageIndex]), 0, 0);
+}
+
+void Gallery::closeImage(){
+    imageIndex= -1;
+    tft.fillScreen(TFT_BLACK);
+    showThumbnails(images);
+    drawHighlightBox();
+}
+
 void Gallery::goToNextHighlightBox(){
   highlightIndex++;
-  Serial.printf("Hl index %d\n", highlightIndex);
+  Serial.printf("Highlighting index %d\n", highlightIndex);
  
   
   if(highlightIndex >= images.size()){

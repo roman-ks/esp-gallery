@@ -21,7 +21,7 @@ class TFTRenderer : public Renderer {
         TFT_eSPI &tft;
         bool staticImgDrawn = false;
 
-        int drawPng(PNG *png, PNGImage &pngImage, PNGDRAW *pDraw);
+        int drawPng(PNG *png, const PNGImage &pngImage, PNGDRAW *pDraw);
 
 };
 #endif

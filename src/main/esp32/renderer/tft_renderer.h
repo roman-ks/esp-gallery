@@ -15,7 +15,7 @@ class TFTRenderer : public Renderer {
 
         void init() override;
         void reset() override;
-        void render(const GIFImage &gifImage) override;
+        // void render(const GIFImage &gifImage) override;
         void render(const PNGImage &pngImage) override;
     private:
         TFT_eSPI &tft;

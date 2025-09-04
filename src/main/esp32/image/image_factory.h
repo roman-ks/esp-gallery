@@ -5,7 +5,7 @@
 
 class ImageFactory {
     public:
-        Image* createImage(const char* filePath);
+        static Image* createImage(const char* filePath);
     private:
         ImageFactory() = default;
 };

@@ -14,10 +14,10 @@ void TFTRenderer::reset() {
     staticImgDrawn = false;
 }
 
-void TFTRenderer::render(const GIFImage &gifImage) {
-    // Implementation for rendering GIF images
-    // This is a placeholder; actual implementation would depend on the GIF library used
-}
+// void TFTRenderer::render(const GIFImage &gifImage) {
+//     // Implementation for rendering GIF images
+//     // This is a placeholder; actual implementation would depend on the GIF library used
+// }
 
 void TFTRenderer::render(const PNGImage &pngImage) {
     if(staticImgDrawn) return; // Draw static image once

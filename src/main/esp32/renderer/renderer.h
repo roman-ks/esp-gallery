@@ -6,13 +6,16 @@
 
 class Renderer {
     public:
-        ~Renderer() = default;
+        virtual ~Renderer();
 
         virtual void init();
         virtual void reset();
-        virtual void render(const GIFImage &gifImage);
+        // virtual void render(const GIFImage &gifImage);
         virtual void render(const PNGImage &pngImage);
     private:
 };
+
+
+inline Renderer::~Renderer(){};
 
 #endif

@@ -2,14 +2,16 @@
 #define __ESP_GALLERY_IMAGE_H__
 
 #include <cstdint>
-#include "../renderer/renderer.h"
 #include "../decoder/decoder.h"
 
+// forward declare to break header circular dependency
+class Renderer;
 
 class Image {
     public:
         Image(Decoder &decoder, char* filePath) 
             : decoder(decoder), filePath(filePath) {}
+
         virtual void render(Renderer &rendered) const = 0;
 
         void setPosition(uint16_t x, uint16_t y) { 

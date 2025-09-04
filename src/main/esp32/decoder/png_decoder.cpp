@@ -11,9 +11,9 @@ void PNGDecoder::init() {
     // Initialize PNG decoder if needed
 }
 
-void PNGDecoder::decode(char* filepath, std::function<int(void*)> drawCallback, void* holder) {
+void PNGDecoder::decode(char* filepath, std::function<int(void*)> drawCallback, void* context) {
 
-    PNG &png = *static_cast<PNG*>(holder);
+    PNG &png = *static_cast<PNG*>(context);
     s_drawCallback = drawCallback;
     Serial.println("Opening image..");
     int16_t rc = png.open(filepath, &PNGDecoder::pngOpen, &PNGDecoder::pngClose, 

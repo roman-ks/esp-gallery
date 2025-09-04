@@ -12,7 +12,7 @@ class PNGDecoder : public Decoder {
         ~PNGDecoder();
 
         void init() override;
-        void decode(char* filepath, std::function<int(void*)> drawCallback, void* returned) override;
+        void decode(char* filepath, std::function<int(void*)> drawCallback, void* context) override;
     private:
         static void * pngOpen(const char *filename, int32_t *size);
         static void pngClose(void *handle);

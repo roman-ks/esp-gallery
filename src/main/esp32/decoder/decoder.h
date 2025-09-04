@@ -9,7 +9,7 @@ class Decoder {
         ~Decoder() = default;
 
         virtual void init();
-        virtual void decode(char* filepath, std::function<int(void*)> drawCallback, void* returned) = 0;
+        virtual void decode(char* filepath, std::function<int(void*)> drawCallback, void* context) = 0;
     private:
 };
 

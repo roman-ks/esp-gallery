@@ -6,8 +6,11 @@
 class ImageFactory {
     public:
         static Image* createImage(const char* filePath);
+        static Image* createDownscaledImage(const char* filePath);
     private:
         ImageFactory() = default;
+
+        static std::string getExtension(const char* filePath);
 };
 
 #endif

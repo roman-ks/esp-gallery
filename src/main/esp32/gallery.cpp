@@ -16,18 +16,23 @@ void Gallery::init() {
         char buf[1000];
         snprintf(buf, sizeof(buf), "/%s", file.name());
         LOGF("Found file: %s", buf);
-        Image* img = ImageFactory::createImage(buf);
+        Image *img = ImageFactory::createImage(buf);
         if(img){
             img->setPosition(0,0); // todo decide where to set position
             images.push_back(img);
-            imageNames.push_back(strdup(buf));
         }
+
+        Image *thumbnail = ImageFactory::createDownscaledImage(buf);
+        if(thumbnail){
+          thumbnails.push_back(thumbnail);
+        }
+
     }
     
     LOGF("Found %d images\n", images.size());  
     LOGF("Max cols: %d, max rows: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS);
 
-    showThumbnails(imageNames);
+    showThumbnails(thumbnails);
     drawHighlightBox();
 }
 
@@ -67,7 +72,7 @@ void Gallery::openImage(){
 void Gallery::closeImage(){
     imageIndex= -1;
     tft.fillScreen(TFT_BLACK);
-    showThumbnails(imageNames);
+    showThumbnails(thumbnails);
     drawHighlightBox();
 }
 
@@ -94,36 +99,21 @@ void Gallery::drawHighlightBox(){
   tft.fillRect(highlighX+thickness, highlighY+GRID_ELEMENT_HEIGHT-thickness, GRID_ELEMENT_WIDTH-2*thickness, thickness, TFT_BLUE);
 }
 
-void Gallery::showPng(IMG_HOLDER imageHolder, uint16_t x, uint16_t y){
-  unsigned long start = micros();
-  tft.startWrite();
-  tft.pushImage(x,y, imageHolder.width, imageHolder.height, imageHolder.imageBytes);
-  tft.endWrite();
-  LOG("Finished drawing");
-  free(imageHolder.imageBytes);
-  LOG("Freed buffer");
-}
-
-void Gallery::showThumbnails(std::vector<char*> thumbnailPaths){
-  unsigned long start = micros();
-  int thumbnailX=0, thumbnailY=0;
-  for (size_t i = 0; i < thumbnailPaths.size(); i++){
-    showThumbnail(i);
+void Gallery::showThumbnails(std::vector<Image*> thumbnails){
+  for (size_t i = 0; i < thumbnails.size(); i++){
+      showThumbnail(i);
   }
-  LOGF("Showing %d thumbnails\n", thumbnailPaths.size());
-
+  LOGF("Showing %d thumbnails\n", thumbnails.size());
 }
 
 void Gallery::showThumbnail(int i){
-  showThumbnail(imageNames[i], getBoxX(i), getBoxY(i));
+    showThumbnail(thumbnails[i], getBoxX(i), getBoxY(i));
 }
 
-void Gallery::showThumbnail(char* tnPath, int x, int y){
-    LOGF("Creating thumbnail for %s\n", tnPath);
-    IMG_HOLDER imageHolder = readPngIntoArray(tnPath);
-    IMG_HOLDER thumbnailHolder = createThumbnailNearest(&imageHolder);
-    free(imageHolder.imageBytes);
-    showPng(thumbnailHolder, x, y);
+void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
+    LOGF("Rendering thumbnail %s\n", thumbnail->filePath);
+    thumbnail->setPosition(x, y);
+    thumbnail->render(renderer);
 }
 
 uint8_t Gallery::getBoxX(int i){

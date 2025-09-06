@@ -1,5 +1,6 @@
 #include "tft_renderer.h"
 #include "../../core/configs.h"
+#include "../log.h"
 
 
 TFTRenderer::~TFTRenderer() {
@@ -20,7 +21,13 @@ void TFTRenderer::reset() {
 // }
 
 void TFTRenderer::render(const PNGImage &pngImage) {
-    if(staticImgDrawn) return; // Draw static image once
+    //todo find a better way to skip renders of the same image
+    // static char* lastDrawn = nullptr;
+    // if(lastDrawn == nullptr)
+    //     lastDrawn = pngImage.filePath;
+    // else 
+    //     if(strcmp(lastDrawn, pngImage.filePath)==0)
+    //         return;
 
     std::function<int(uint16_t, uint16_t, uint16_t, uint16_t*)> drawPngCallback = 
         [this, pngImage](uint16_t y, int16_t w, int16_t h, uint16_t* colors){

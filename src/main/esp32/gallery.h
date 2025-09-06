@@ -14,7 +14,7 @@
 class Gallery {
     public:
         Gallery(Renderer &renderer, TFT_eSPI &tft): 
-            renderer(renderer), tft(tft), images(), imageNames() {};
+            renderer(renderer), tft(tft), images(), thumbnails() {};
         ~Gallery();
 
         void init();
@@ -29,19 +29,21 @@ class Gallery {
         Renderer &renderer;  
         TFT_eSPI &tft;
         std::vector<Image*> images;
-        std::vector<char*> imageNames;
+        std::vector<Image*> thumbnails;
+        // std::vector<char*> imageNames;
         int highlightIndex = 0;
         int imageIndex = -1;
 
         void goToNextHighlightBox();
         void drawHighlightBox();
         void showThumbnail(int index);
-        void showThumbnail(char* tnPath, int x, int y);
-        void showThumbnails(std::vector<char*> thumbnailPaths);
-        void showPng(IMG_HOLDER imageHolder, uint16_t x, uint16_t y);
+        void showThumbnail(Image* thumbnail, uint8_t x, uint8_t y);
+        void showThumbnails(std::vector<Image*> thumbnails);
                 
         uint8_t getBoxX(int i);
         uint8_t getBoxY(int i);
+        
+
 };
 
 #endif

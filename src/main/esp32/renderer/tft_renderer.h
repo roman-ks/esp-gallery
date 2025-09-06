@@ -3,9 +3,6 @@
 
 #include "renderer.h"
 #include <TFT_eSPI.h>
-#include <AnimatedGIF.h>
-#include <PNGdec.h>
-
 
 class TFTRenderer : public Renderer {
     public:
@@ -21,7 +18,8 @@ class TFTRenderer : public Renderer {
         TFT_eSPI &tft;
         bool staticImgDrawn = false;
 
-        int drawPng(PNG *png, const PNGImage &pngImage, PNGDRAW *pDraw);
+        int drawImage(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *colors);
+
 
 };
 #endif

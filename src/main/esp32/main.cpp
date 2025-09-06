@@ -36,6 +36,7 @@ void setup() {
   }
   
   tft.begin();
+  renderer->init();
   controller.init();
   gallery.init();
 

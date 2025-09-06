@@ -1,5 +1,5 @@
 #include "controller.h"
-
+#include "log.h"
 
 
 Controller::~Controller() {
@@ -15,10 +15,10 @@ void Controller::init(){
 
 void Controller::loop(){
     if(isButtonPressed(SCROLL_LEFT_BUTTON)){
-        Serial.println("Scroll left button pressed");
+        LOG("Scroll left button pressed");
         handleLeftButtonPress();
     } else if(isButtonPressed(ENTER_BUTTON)){
-        Serial.println("Enter button pressed");
+        LOG("Enter button pressed");
         handleEnterButtonPress();
     } else {
         // No button pressed, keep drawing current image if any

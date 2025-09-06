@@ -31,7 +31,7 @@ void setup() {
   }
 
   if(!LittleFS.begin()){
-    Serial.println("An Error has occurred while mounting LittleFS");
+    LOG("An Error has occurred while mounting LittleFS");
     return;
   }
   
@@ -40,7 +40,7 @@ void setup() {
   gallery.init();
 
 //   // gif.begin(BIG_ENDIAN_PIXELS);
-//   Serial.println("\r\nInitialisation done.");
+//   LOG("\r\nInitialisation done.");
 }
 
 void loop() {
@@ -52,14 +52,14 @@ void loop() {
 
 // // unsigned char* encodeBase64(const uint8_t *input, size_t len){
 // //   uint32_t base64length = 4*((len+2)/3)+1;
-// //   Serial.printf("Expected base64 size: %d\n", base64length);
+// //   LOGF("Expected base64 size: %d\n", base64length);
 // //   unsigned char *encoded = (unsigned char*)ps_malloc(base64length);
-// //   Serial.printf("Allocated base64 buffer at 0x%x\n", encoded);
+// //   LOGF("Allocated base64 buffer at 0x%x\n", encoded);
 // //   size_t outLen;
 // //   mbedtls_base64_encode(encoded, base64length, &outLen, input, len);
 // //   // terminate to use as c-style string
 // //   encoded[outLen]=0;
-// //   Serial.println("Base64 encoding finished");
+// //   LOG("Base64 encoding finished");
 // //   return encoded;
 // // }
 

@@ -1,6 +1,7 @@
 #include "png_decoder.h"
 #include "../../core/configs.h"
 #include <LittleFS.h>
+#include "../log.h"
 
 PNGDecoder::PNGDecoder() {
 }
@@ -15,27 +16,27 @@ void PNGDecoder::decode(char* filepath, std::function<int(void*)> drawCallback, 
 
     PNG &png = *static_cast<PNG*>(context);
     PNGDecoder::s_drawCallback = drawCallback;
-    Serial.println("Opening image..");
+    LOG("Opening image..");
     int16_t rc = png.open(filepath, &PNGDecoder::pngOpen, &PNGDecoder::pngClose, 
         &PNGDecoder::pngRead, &PNGDecoder::pngSeek, &PNGDecoder::pngDraw);
     if (rc == PNG_SUCCESS) {
-        Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
+        LOGF("image specs: (%d x %d), %d bpp, pixel type: %d\n", png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
         uint32_t dt = millis();
         if (png.getWidth() > MAX_IMAGE_WIDTH) {
-          Serial.println("Image too wide for allocated line buffer size!");
+          LOG("Image too wide for allocated line buffer size!");
         }
         else {
           rc = png.decode(NULL, 0);
           png.close();
         }
         // How long did rendering take...
-        Serial.print(millis()-dt); Serial.println("ms");
+        LOGF("Decoded in %dms", millis()-dt);
     }
     s_drawCallback = nullptr;
 }
 
 void * PNGDecoder::pngOpen(const char *filename, int32_t *size) {
-  Serial.printf("Attempting to open %s\n", filename);
+  LOGF("Attempting to open %s\n", filename);
   File file = LittleFS.open(filename, "r");
   *size = file.size();
   return &file;

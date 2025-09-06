@@ -4,6 +4,7 @@
 #include <cstring>
 #include "../core/img_holder.h"
 #include "thumbnail_utils.h"
+#include "log.h"
 
 Gallery::~Gallery() {
 }
@@ -14,7 +15,7 @@ void Gallery::init() {
     while(fs::File file = root.openNextFile()){
         char buf[1000];
         snprintf(buf, sizeof(buf), "/%s", file.name());
-        Serial.println(buf);
+        LOGF("Found file: %s", buf);
         Image* img = ImageFactory::createImage(buf);
         if(img){
             img->setPosition(0,0); // todo decide where to set position
@@ -23,8 +24,8 @@ void Gallery::init() {
         }
     }
     
-    Serial.printf("Found %d images\n", images.size());  
-    Serial.printf("Max cols: %d, max rows: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS);
+    LOGF("Found %d images\n", images.size());  
+    LOGF("Max cols: %d, max rows: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS);
 
     showThumbnails(imageNames);
     drawHighlightBox();
@@ -72,11 +73,11 @@ void Gallery::closeImage(){
 
 void Gallery::goToNextHighlightBox(){
   highlightIndex++;
-  Serial.printf("Highlighting index %d\n", highlightIndex);
+  LOGF("Highlighting index %d\n", highlightIndex);
  
   
   if(highlightIndex >= images.size()){
-    Serial.println("Resetting highlight index");
+    LOG("Resetting highlight index");
     highlightIndex=0;
   }
 }
@@ -98,9 +99,9 @@ void Gallery::showPng(IMG_HOLDER imageHolder, uint16_t x, uint16_t y){
   tft.startWrite();
   tft.pushImage(x,y, imageHolder.width, imageHolder.height, imageHolder.imageBytes);
   tft.endWrite();
-  Serial.println("Finished drawing");
+  LOG("Finished drawing");
   free(imageHolder.imageBytes);
-  Serial.println("Freed buffer");
+  LOG("Freed buffer");
 }
 
 void Gallery::showThumbnails(std::vector<char*> thumbnailPaths){
@@ -109,7 +110,7 @@ void Gallery::showThumbnails(std::vector<char*> thumbnailPaths){
   for (size_t i = 0; i < thumbnailPaths.size(); i++){
     showThumbnail(i);
   }
-  Serial.printf("Showing %d thumbnails\n", thumbnailPaths.size());
+  LOGF("Showing %d thumbnails\n", thumbnailPaths.size());
 
 }
 
@@ -118,7 +119,7 @@ void Gallery::showThumbnail(int i){
 }
 
 void Gallery::showThumbnail(char* tnPath, int x, int y){
-    Serial.printf("Creating thumbnail for %s\n", tnPath);
+    LOGF("Creating thumbnail for %s\n", tnPath);
     IMG_HOLDER imageHolder = readPngIntoArray(tnPath);
     IMG_HOLDER thumbnailHolder = createThumbnailNearest(&imageHolder);
     free(imageHolder.imageBytes);

@@ -1,48 +1,50 @@
 #include "main.h"
 #include <Arduino.h>
 #include "image/gif_image.h"
-// #include "LittleFS.h"
+#include "LittleFS.h"
 // #include <vector>
 // #include "mbedtls/base64.h"
 // #include <AnimatedGIF.h>
 #include "controller.h"
 #include "gallery.h"
 #include "renderer/tft_renderer.h"
+#include <memory>
+#include "log.h"
 
 // // Include the TFT library https://github.com/Bodmer/TFT_eSPI
 #include "SPI.h"
 #include <TFT_eSPI.h>              // Hardware-specific library
 TFT_eSPI tft = TFT_eSPI();         // Invoke custom library
 
-// Renderer renderer = TFTRenderer(tft);
-// Gallery gallery(renderer, tft);
-// Controller controller(gallery);
+std::unique_ptr<Renderer> renderer = std::make_unique<TFTRenderer>(tft);
+Gallery gallery(*renderer, tft);
+Controller controller(gallery);
 
 
 void setup() {
 
-//   Serial.begin(115200);
+  Serial.begin(115200);
 
-//   if(!psramFound()){
-//     Serial.println("PSRAM not found!");
-//     while(0);
-//   }
+  if(!psramFound()){
+    LOG("PSRAM not found!");
+    while(0);
+  }
 
-//   if(!LittleFS.begin()){
-//     Serial.println("An Error has occurred while mounting LittleFS");
-//     return;
-//   }
+  if(!LittleFS.begin()){
+    Serial.println("An Error has occurred while mounting LittleFS");
+    return;
+  }
   
-//   tft.begin();
-//   controller.init();
-//   gallery.init();
+  tft.begin();
+  controller.init();
+  gallery.init();
 
 //   // gif.begin(BIG_ENDIAN_PIXELS);
 //   Serial.println("\r\nInitialisation done.");
 }
 
 void loop() {
-//   controller.loop();
+  controller.loop();
 //   // put your main code here, to run repeatedly:
 //   // gif.playFrame(true, NULL);
 //   // delay(100);

@@ -5,7 +5,7 @@
 PNGDecoder::PNGDecoder() {
 }
 PNGDecoder::~PNGDecoder() {
-  s_drawCallback = nullptr;
+  PNGDecoder::s_drawCallback = nullptr;
 }
 void PNGDecoder::init() {
     // Initialize PNG decoder if needed
@@ -14,7 +14,7 @@ void PNGDecoder::init() {
 void PNGDecoder::decode(char* filepath, std::function<int(void*)> drawCallback, void* context) {
 
     PNG &png = *static_cast<PNG*>(context);
-    s_drawCallback = drawCallback;
+    PNGDecoder::s_drawCallback = drawCallback;
     Serial.println("Opening image..");
     int16_t rc = png.open(filepath, &PNGDecoder::pngOpen, &PNGDecoder::pngClose, 
         &PNGDecoder::pngRead, &PNGDecoder::pngSeek, &PNGDecoder::pngDraw);
@@ -63,8 +63,8 @@ int32_t PNGDecoder::pngSeek(PNGFILE *page, int32_t position) {
 // wrapper to have function delegeate to std::function and erase param type
 int PNGDecoder::pngDraw(PNGDRAW *pDraw) {
 //   if (!file) return 0;
-  if (s_drawCallback) {
-      return s_drawCallback((void*)pDraw);
+  if (PNGDecoder::s_drawCallback) {
+      return PNGDecoder::s_drawCallback((void*)pDraw);
   }
   return 0;
 }

@@ -8,10 +8,10 @@ class Renderer {
     public:
         virtual ~Renderer();
 
-        virtual void init();
-        virtual void reset();
+        virtual void init() = 0;
+        virtual void reset() = 0;
         // virtual void render(const GIFImage &gifImage);
-        virtual void render(const PNGImage &pngImage);
+        virtual void render(const PNGImage &pngImage) = 0;
     private:
 };
 

@@ -21,6 +21,6 @@ class PNGDecoder : public Decoder {
         static int pngDraw(PNGDRAW *pDraw);
         PNG getPNG();
 
-        static std::function<int(void*)> s_drawCallback;
+        inline static std::function<int(void*)> s_drawCallback = nullptr;
 };
 #endif

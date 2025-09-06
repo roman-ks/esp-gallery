@@ -4,6 +4,7 @@
 #include "decoder.h"
 #include <PNGdec.h>
 #include <FS.h>
+#include <memory>
 
 
 class PNGDecoder : public Decoder {
@@ -22,5 +23,6 @@ class PNGDecoder : public Decoder {
         PNG getPNG();
 
         inline static std::function<int(void*)> s_drawCallback = nullptr;
+        inline static std::unique_ptr<File> file = nullptr;
 };
 #endif

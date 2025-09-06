@@ -37,28 +37,31 @@ void PNGDecoder::decode(char* filepath, std::function<int(void*)> drawCallback, 
 
 void * PNGDecoder::pngOpen(const char *filename, int32_t *size) {
   LOGF("Attempting to open %s\n", filename);
-  File file = LittleFS.open(filename, "r");
-  *size = file.size();
-  return &file;
+  PNGDecoder::file = std::make_unique<File>(LittleFS.open(filename, "r"));
+  *size = PNGDecoder::file->size();
+  LOGF("File size: %d\n", *size);
+  return &PNGDecoder::file;
 }
 
 void PNGDecoder::pngClose(void *handle) {
-  File *file = static_cast<File*>(handle);
-  if (file) file->close();
+  if (PNGDecoder::file) {
+    PNGDecoder::file->close();
+    PNGDecoder::file=nullptr;
+  }
 }
 
 int32_t PNGDecoder::pngRead(PNGFILE *page, uint8_t *buffer, int32_t length) {
-  File *file = static_cast<File*>(page->fHandle);
-  if (!file) return 0;
+  LOG("pngRead");
+  if (!PNGDecoder::file) return 0;
   page = page; // Avoid warning
-  return file->read(buffer, length);
+  return PNGDecoder::file->read(buffer, length);
 }
 
 int32_t PNGDecoder::pngSeek(PNGFILE *page, int32_t position) {
-  File *file = static_cast<File*>(page->fHandle);
-  if (!file) return 0;
+  LOG("pngSeek");
+  if (!PNGDecoder::file) return 0;
   page = page; // Avoid warning
-  return file->seek(position);
+  return PNGDecoder::file->seek(position);
 }
 
 // wrapper to have function delegeate to std::function and erase param type

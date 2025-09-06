@@ -20,3 +20,11 @@ pacman -S mingw-w64-ucrt-x86_64-cmake
 cmake -S . -B build -G "MinGW Makefiles"
 ```
 
+## Find exeption trace:
+1. Find backtrace in logs, look for pairs of hex numbers eg 0x42003ec8:0x3fcebcc0
+2. Go to C:\Users\<user>\AppData\Local\arduino\sketches\
+3. Find and open the sketch folder, usually most recent one.
+4. In command below replace elf file with your name in sketch ffolder. But backtrace in the end of the command and execute
+```
+C:\Users\<user>\.platformio\packages\toolchain-xtensa-esp32s3\bin\xtensa-esp32s3-elf-addr2line.exe -pf -e .\Read_User_Setup.ino.elf 0x42003ec8:0x3fcebcc0
+```

@@ -4,7 +4,6 @@
 #include "LittleFS.h"
 // #include <vector>
 // #include "mbedtls/base64.h"
-// #include <AnimatedGIF.h>
 #include "controller.h"
 #include "gallery.h"
 #include "renderer/tft_renderer.h"

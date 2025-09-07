@@ -1,8 +1,9 @@
 #include "image_factory.h"
-#include "PNGDec.h"
 #include "../decoder/png_decoder.h"
+#include "../decoder/gif_decoder.h"
 #include "../decoder/png_downscale_decoder.h"
 #include "png_image.h"
+#include "gif_image.h"
 #include "../log.h"
 
 Image* ImageFactory::createImage(const char* filePath) {
@@ -11,7 +12,10 @@ Image* ImageFactory::createImage(const char* filePath) {
     if (ext == ".png") {
         static PNGDecoder pngDecoder;
         return new PNGImage(pngDecoder, strdup(filePath));
-    } 
+    } else if (ext == ".gif"){
+        static GIFDecoder gifDecoder;
+        return new GIFImage(gifDecoder, strdup(filePath));
+    }
     // Add more formats as needed
     return nullptr; // Unsupported format
 }

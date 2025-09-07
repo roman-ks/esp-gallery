@@ -11,7 +11,7 @@ class Decoder {
         ~Decoder() = default;
 
         virtual void init();
-        virtual void decode(char* filepath, DrawCallbackFunc &drawCallback) = 0;
+        virtual void decode(const char* filepath, DrawCallbackFunc &drawCallback) = 0;
     private:
 };
 

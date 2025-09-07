@@ -14,12 +14,12 @@ void PNGDecoder::init() {
     // Initialize PNG decoder if needed
 }
 
-void PNGDecoder::decode(char* filepath, DrawCallbackFunc &drawCallback) {
+void PNGDecoder::decode(const char* filepath, DrawCallbackFunc &drawCallback) {
     decode(filepath, drawCallback, &PNGDecoder::pngOpen, &PNGDecoder::pngClose, 
         &PNGDecoder::pngRead, &PNGDecoder::pngSeek, &PNGDecoder::pngDraw);
 }
 
-void PNGDecoder::decode(char* filepath, DrawCallbackFunc &drawCallback, 
+void PNGDecoder::decode(const char* filepath, DrawCallbackFunc &drawCallback, 
                         PNG_OPEN_CALLBACK *openCB, PNG_CLOSE_CALLBACK *closeCB,
                         PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB) {
     PNG &png = PNGDecoder::getPng();

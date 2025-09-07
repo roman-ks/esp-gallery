@@ -8,7 +8,7 @@ PNGDownscaleDecoder::PNGDownscaleDecoder(){
 PNGDownscaleDecoder::~PNGDownscaleDecoder(){   
 }
 
-void PNGDownscaleDecoder::decode(char* filepath, DrawCallbackFunc &drawCallback) {
+void PNGDownscaleDecoder::decode(const char* filepath, DrawCallbackFunc &drawCallback) {
     LOG("Decoding with downscale");
     PNGDecoder::decode(filepath, drawCallback, &PNGDecoder::pngOpen, &PNGDecoder::pngClose, 
         &PNGDecoder::pngRead, &PNGDecoder::pngSeek, &PNGDownscaleDecoder::pngDrawDownscaling);

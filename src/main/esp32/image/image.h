@@ -17,9 +17,8 @@ class Image {
         void setPosition(uint16_t x, uint16_t y) { 
             xPos = x; yPos = y; 
         }
-        // // todo make final?
         Decoder& decoder;
-        char* filePath;
+        const char* filePath;
         uint16_t xPos = 0;
         uint16_t yPos = 0;
 };

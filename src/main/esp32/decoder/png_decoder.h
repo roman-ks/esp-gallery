@@ -14,7 +14,7 @@ class PNGDecoder : public Decoder {
         ~PNGDecoder();
 
         void init() override;
-        void decode(char* filepath, DrawCallbackFunc &drawCallback) override;
+        void decode(const char* filepath, DrawCallbackFunc &drawCallback) override;
     protected: 
         static uint16_t* getLineBuffer(){
             return lineBuffer;
@@ -35,7 +35,7 @@ class PNGDecoder : public Decoder {
             return s_drawCallback;
         }
 
-        void decode(char* filepath, DrawCallbackFunc &drawCallback, 
+        void decode(const char* filepath, DrawCallbackFunc &drawCallback, 
                         PNG_OPEN_CALLBACK *openCB, PNG_CLOSE_CALLBACK *closeCB,
                         PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB);
         static void * pngOpen(const char *filename, int32_t *size);

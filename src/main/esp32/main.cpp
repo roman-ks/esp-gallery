@@ -17,7 +17,7 @@
 TFT_eSPI tft = TFT_eSPI();         // Invoke custom library
 
 std::unique_ptr<Renderer> renderer = std::make_unique<TFTRenderer>(tft);
-Gallery gallery(*renderer, tft);
+Gallery gallery(*renderer);
 Controller controller(gallery);
 
 

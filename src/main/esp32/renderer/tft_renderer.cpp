@@ -7,11 +7,11 @@ TFTRenderer::~TFTRenderer() {
 }
 
 void TFTRenderer::init() {
-    tft.fillScreen(TFT_BLACK);
+    tft.fillScreen(BG_COLOR);
 }
 
 void TFTRenderer::reset() {
-    tft.fillScreen(TFT_BLACK);
+    tft.fillScreen(BG_COLOR);
 }
 
 // void TFTRenderer::render(const GIFImage &gifImage) {
@@ -32,9 +32,21 @@ void TFTRenderer::render(const PNGImage &pngImage) {
     lastRenderedId = pngImage.id;
 }
 
-
 int TFTRenderer::drawImage(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *colors) {
     tft.pushImage(x, y, w, h, colors);
     return 1;
 }
+
+void TFTRenderer::renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
+                          uint16_t thickness, uint32_t color){
+
+    // vertical lines
+  tft.fillRect(x, y, thickness, h, color);  
+  tft.fillRect(x+w-thickness, y, thickness, h, color);
+  // horizontal lines
+  tft.fillRect(x+thickness, y, w-2*thickness, thickness, color);  
+  tft.fillRect(x+thickness, y+h-thickness, w-2*thickness, thickness, color);
+
+}
+    
 

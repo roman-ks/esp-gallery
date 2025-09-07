@@ -33,7 +33,7 @@ void Gallery::init() {
     LOGF("Max cols: %d, max rows: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS);
 
     showThumbnails(thumbnails);
-    drawHighlightBox();
+    drawHighlightBox(HIGHLIGHT_COLOR);
 }
 
 void Gallery::draw(){
@@ -53,11 +53,13 @@ void Gallery::nextImage(){
 }
 
 void Gallery::nextHighlight(){
-    tft.fillRect(getBoxX(highlightIndex), getBoxY(highlightIndex), GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT, TFT_BLACK);
+    // overwrite current highlight
+    drawHighlightBox(BG_COLOR);   
     showThumbnail(highlightIndex);
+
     goToNextHighlightBox();
-    drawHighlightBox();
-}
+    drawHighlightBox(HIGHLIGHT_COLOR);  
+  }
 
 bool Gallery::isImageOpen(){
     return imageIndex >= 0;
@@ -71,9 +73,9 @@ void Gallery::openImage(){
 
 void Gallery::closeImage(){
     imageIndex= -1;
-    tft.fillScreen(TFT_BLACK);
+    renderer.reset();
     showThumbnails(thumbnails);
-    drawHighlightBox();
+    drawHighlightBox(HIGHLIGHT_COLOR);
 }
 
 void Gallery::goToNextHighlightBox(){
@@ -87,16 +89,9 @@ void Gallery::goToNextHighlightBox(){
   }
 }
 
-void Gallery::drawHighlightBox(){
-  int8_t thickness = 2;
-  uint8_t highlighX = getBoxX(highlightIndex);
-  uint8_t highlighY = getBoxY(highlightIndex);
-  // vertical lines
-  tft.fillRect(highlighX, highlighY, thickness, GRID_ELEMENT_HEIGHT, TFT_BLUE);  
-  tft.fillRect(highlighX+GRID_ELEMENT_WIDTH-thickness, highlighY, thickness, GRID_ELEMENT_HEIGHT, TFT_BLUE);
-  // horizontal lines
-  tft.fillRect(highlighX+thickness, highlighY, GRID_ELEMENT_WIDTH-2*thickness, thickness, TFT_BLUE);  
-  tft.fillRect(highlighX+thickness, highlighY+GRID_ELEMENT_HEIGHT-thickness, GRID_ELEMENT_WIDTH-2*thickness, thickness, TFT_BLUE);
+void Gallery::drawHighlightBox(uint32_t color){
+  renderer.renderBorder(getBoxX(highlightIndex), getBoxY(highlightIndex), 
+    GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT, HIGHLIGHT_THICKNESS, color);
 }
 
 void Gallery::showThumbnails(std::vector<Image*> thumbnails){
@@ -116,11 +111,11 @@ void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
     thumbnail->render(renderer);
 }
 
-uint8_t Gallery::getBoxX(int i){
+uint16_t Gallery::getBoxX(int i){
   return (i % GRID_MAX_COLS) * GRID_ELEMENT_WIDTH;
 }
 
-uint8_t Gallery::getBoxY(int i){
+uint16_t Gallery::getBoxY(int i){
   return (i / GRID_MAX_COLS) * GRID_ELEMENT_HEIGHT;
 }
 

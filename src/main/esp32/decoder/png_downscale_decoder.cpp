@@ -5,12 +5,12 @@
 PNGDownscaleDecoder::PNGDownscaleDecoder(){
 }
 
-PNGDownscaleDecoder::~PNGDownscaleDecoder(){   
+PNGDownscaleDecoder::~PNGDownscaleDecoder(){
 }
 
-void PNGDownscaleDecoder::decode(const char* filepath, DrawCallbackFunc &drawCallback) {
+void PNGDownscaleDecoder::decode(const char *filepath, IDrawTarget &iDrawTarget) {
     LOG("Decoding with downscale");
-    PNGDecoder::decode(filepath, drawCallback, &PNGDecoder::pngOpen, &PNGDecoder::pngClose, 
+    PNGDecoder::decode(filepath, iDrawTarget, &PNGDecoder::pngOpen, &PNGDecoder::pngClose,
         &PNGDecoder::pngRead, &PNGDecoder::pngSeek, &PNGDownscaleDecoder::pngDrawDownscaling);
 }
 
@@ -19,16 +19,15 @@ int PNGDownscaleDecoder::pngDrawDownscaling(PNGDRAW *pDraw) {
     if(lineN == 0){
         uint16_t *buf= PNGDecoder::getLineBuffer();
         PNGDecoder::getPng().getLineAsRGB565(pDraw, buf, PNG_RGB565_BIG_ENDIAN, 0xffffffff);
-        
+
         uint16_t downScaledWidth = 0;
         for(uint16_t i=0; i < pDraw->iWidth; i+=THUMBNAIL_WIDTH_SCALE_FACTOR){
             resultBuf[downScaledWidth++] = buf[i];
         }
-        if (PNGDecoder::getDrawCallback()) {
-            uint16_t y = pDraw->y/THUMBNAIL_HEIGHT_SCALE_FACTOR;
-            return PNGDecoder::getDrawCallback()(y, 
-                downScaledWidth, 1, PNGDownscaleDecoder::resultBuf);
-        }
+        uint16_t y = pDraw->y / THUMBNAIL_HEIGHT_SCALE_FACTOR;
+        getIDrawTarget().setAddrWindow(0, y, downScaledWidth, 1);
+        getIDrawTarget().pushPixels(resultBuf, downScaledWidth);
+        return 1;
     }
 
     lineN++;

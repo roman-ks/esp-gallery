@@ -9,7 +9,7 @@ class PNGDownscaleDecoder : public PNGDecoder{
         PNGDownscaleDecoder();
         virtual ~PNGDownscaleDecoder();
 
-        virtual void decode(const char* filepath, DrawCallbackFunc &drawCallback) override;
+        virtual void decode(const char* filepath, IDrawTarget &iDrawTarget) override;
     private:
         inline static uint16_t resultBuf[GRID_ELEMENT_WIDTH];
         inline static int16_t lineN = 0;

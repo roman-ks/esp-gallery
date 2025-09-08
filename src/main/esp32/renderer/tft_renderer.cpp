@@ -1,4 +1,6 @@
 #include "tft_renderer.h"
+
+#include "offsetting_draw_target.h"
 #include "../../core/configs.h"
 #include "../log.h"
 
@@ -23,12 +25,12 @@ void TFTRenderer::render(const PNGImage &pngImage) {
     static uint16_t lastRenderedId = 0;
     if(lastRenderedId == pngImage.id)
         return;
+    OffsettingDrawTarget drawTarget(*this, pngImage.xPos, pngImage.yPos);
+    tft.startWrite(); // The TFT chip select is locked low
 
-    std::function<int(uint16_t, uint16_t, uint16_t, uint16_t*)> drawPngCallback = 
-        [this, pngImage](uint16_t y, int16_t w, int16_t h, uint16_t* colors){
-            return this->drawImage(pngImage.xPos, pngImage.yPos + y, w, h, colors);
-    };
-    pngImage.decoder.decode(pngImage.filePath, drawPngCallback);
+    pngImage.decoder.decode(pngImage.filePath, drawTarget);
+    tft.endWrite(); // The TFT chip select is locked low
+
     lastRenderedId = pngImage.id;
 }
 
@@ -48,5 +50,16 @@ void TFTRenderer::renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
   tft.fillRect(x+thickness, y+h-thickness, w-2*thickness, thickness, color);
 
 }
-    
+
+void TFTRenderer::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+    // LOGF("Window addr (%d,%d), (%d,%d)\n", x,y,w,h);
+
+    tft.setAddrWindow(x,y, w, h);
+}
+
+void TFTRenderer::pushPixels(const void *pixels, uint32_t count){
+    // LOGF("Pushing pixels %d\n", count);
+
+    tft.pushPixels(pixels, count);
+}    
 

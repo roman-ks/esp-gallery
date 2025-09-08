@@ -4,14 +4,14 @@
 #include <cstdint>
 #include <memory>
 
-using DrawCallbackFunc = std::function<int(uint16_t, uint16_t, uint16_t, uint16_t*)>;
+#include "i_draw_target.h"
 
 class Decoder {
     public:
-        ~Decoder() = default;
+        virtual ~Decoder() = default;
 
         virtual void init();
-        virtual void decode(const char* filepath, DrawCallbackFunc &drawCallback) = 0;
+        virtual void decode(const char* filepath, IDrawTarget &iDrawTarget) = 0;
     private:
 };
 

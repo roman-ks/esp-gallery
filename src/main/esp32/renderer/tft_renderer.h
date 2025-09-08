@@ -6,7 +6,7 @@
 
 class TFTRenderer : public Renderer {
     public:
-        TFTRenderer(TFT_eSPI &tft) 
+        TFTRenderer(TFT_eSPI &tft)
             : tft(tft) {}
         ~TFTRenderer();
 
@@ -16,6 +16,10 @@ class TFTRenderer : public Renderer {
         void render(const PNGImage &pngImage) override;
         void renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
                           uint16_t thickness, uint32_t color) override;
+
+        void setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) override;
+        void pushPixels(const void *pixels, uint32_t count) override;
+
     private:
         TFT_eSPI &tft;
 

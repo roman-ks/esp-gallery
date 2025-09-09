@@ -12,10 +12,10 @@ Image* ImageFactory::createImage(const char* filePath) {
     if (ext == ".png") {
         static PNGDecoder pngDecoder;
         return new PNGImage(pngDecoder, strdup(filePath));
-    } /*else if (ext == ".gif"){
+    } else if (ext == ".gif"){
         static GIFDecoder gifDecoder;
         return new GIFImage(gifDecoder, strdup(filePath));
-    }*/
+    }
     // Add more formats as needed
     return nullptr; // Unsupported format
 }

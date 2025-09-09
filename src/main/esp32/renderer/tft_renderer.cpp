@@ -16,10 +16,12 @@ void TFTRenderer::reset() {
     tft.fillScreen(BG_COLOR);
 }
 
-// void TFTRenderer::render(const GIFImage &gifImage) {
-//     // Implementation for rendering GIF images
-//     // This is a placeholder; actual implementation would depend on the GIF library used
-// }
+void TFTRenderer::render(const GIFImage &gifImage) {
+    tft.startWrite(); // The TFT chip select is locked low
+
+    gifImage.decoder.decode(gifImage.filePath, *this);
+    tft.endWrite(); // The TFT chip select is locked low
+}
 
 void TFTRenderer::render(const PNGImage &pngImage) {
     static uint16_t lastRenderedId = 0;

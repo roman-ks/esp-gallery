@@ -12,7 +12,7 @@ class TFTRenderer : public Renderer {
 
         void init() override;
         void reset() override;
-        // void render(const GIFImage &gifImage) override;
+        void render(const GIFImage &gifImage) override;
         void render(const PNGImage &pngImage) override;
         void renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
                           uint16_t thickness, uint32_t color) override;

@@ -19,7 +19,9 @@ std::unique_ptr<Renderer> renderer = std::make_unique<TFTRenderer>(tft);
 Gallery gallery(*renderer);
 Controller controller(gallery);
 
+Image *img;
 
+#include "image/image_factory.h"
 void setup() {
 
   Serial.begin(115200);
@@ -36,15 +38,20 @@ void setup() {
   
   tft.begin();
   renderer->init();
-  controller.init();
-  gallery.init();
+  // controller.init();
+  // gallery.init();
+
+  img = ImageFactory::createImage("/dotpict_a_20250831_125038.gif");
+  img->render(*renderer);
 
 //   // gif.begin(BIG_ENDIAN_PIXELS);
 //   LOG("\r\nInitialisation done.");
 }
 
 void loop() {
-  controller.loop();
+  img->render(*renderer);
+
+  // controller.loop();
 //   // put your main code here, to run repeatedly:
 //   // gif.playFrame(true, NULL);
 //   // delay(100);

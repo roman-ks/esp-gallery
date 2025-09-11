@@ -1,10 +1,10 @@
 #include "downscale_draw_target.h"
 #include <cstring>
 
-DownscaleDrawTarget::DownscaleDrawTarget(IDrawTarget& delegate,
+DownscaleDrawTarget::DownscaleDrawTarget(IDrawTarget *delegate, 
                                          uint16_t widthScale,
-                                         uint16_t heightScale)
-    : m_delegate(delegate),
+                                         uint16_t heightScale):
+      DelegatingDrawTarget(std::move(delegate)),
       m_widthScale(widthScale),
       m_heightScale(heightScale),
       m_windowX(0), m_windowY(0), m_windowW(0), m_windowH(0),
@@ -24,7 +24,7 @@ void DownscaleDrawTarget::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint
     uint16_t dw = w / m_widthScale;
     uint16_t dh = h / m_heightScale;
 
-    m_delegate.setAddrWindow(x / m_widthScale, y / m_heightScale, dw, dh);
+    delegate->setAddrWindow(x / m_widthScale, y / m_heightScale, dw, dh);
 
     // Allocate buffer for one chunk of downscaled pixels
     m_downBuf.clear();
@@ -53,7 +53,7 @@ void DownscaleDrawTarget::pushPixels(const void *pixels, uint32_t count) {
 
     // Flush if we collected enough downscaled pixels for a row
     if (!m_downBuf.empty()) {
-        m_delegate.pushPixels(m_downBuf.data(), m_downBuf.size());
+        delegate->pushPixels(m_downBuf.data(), m_downBuf.size());
         m_downBuf.clear();
     }
 }

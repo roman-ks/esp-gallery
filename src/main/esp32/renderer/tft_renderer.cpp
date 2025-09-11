@@ -17,9 +17,10 @@ void TFTRenderer::reset() {
 }
 
 void TFTRenderer::render(const GIFImage &gifImage) {
+    OffsettingDrawTarget drawTarget(*this, gifImage.xPos, gifImage.yPos);
     tft.startWrite(); // The TFT chip select is locked low
 
-    gifImage.decoder.decode(gifImage.filePath, *this);
+    gifImage.decoder.decode(gifImage.filePath, drawTarget);
     tft.endWrite(); // The TFT chip select is locked low
 }
 

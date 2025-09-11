@@ -41,7 +41,8 @@ void setup() {
   // controller.init();
   // gallery.init();
 
-  img = ImageFactory::createImage("/dotpict_a_20250831_125038.gif");
+  img = ImageFactory::createDownscaledImage("/dotpict_a_20250831_125038.gif");
+  img->setPosition(80, 80);
   img->render(*renderer);
 
 //   // gif.begin(BIG_ENDIAN_PIXELS);

@@ -2,9 +2,12 @@
 #include "../decoder/png_decoder.h"
 #include "../decoder/gif_decoder.h"
 #include "../decoder/png_downscale_decoder.h"
+#include "../decoder/downscale_draw_target.h"
+#include "../decoder/DelegatingDrawTarget.h"
 #include "png_image.h"
 #include "gif_image.h"
 #include "../log.h"
+#include "../../core/configs.h"
 
 Image* ImageFactory::createImage(const char* filePath) {
     std::string ext = getExtension(filePath);
@@ -26,7 +29,18 @@ Image* ImageFactory::createDownscaledImage(const char* filePath){
     if (ext == ".png") {
         static PNGDownscaleDecoder pngDecoder;
         return new PNGImage(pngDecoder, strdup(filePath));
-    } 
+    } else if (ext == ".gif"){
+        static std::vector<DelegatingDrawTargetFactory> delegatingFactories;
+        if(delegatingFactories.empty()){
+            static DelegatingDrawTargetFactory factory = [](IDrawTarget *delegate)->DelegatingDrawTarget* { 
+                return new DownscaleDrawTarget(delegate, 
+                    THUMBNAIL_WIDTH_SCALE_FACTOR, THUMBNAIL_HEIGHT_SCALE_FACTOR);
+            };
+            delegatingFactories.push_back(factory);
+        }
+        static GIFDecoder gifDecoder(delegatingFactories);
+        return new GIFImage(gifDecoder, strdup(filePath));
+    }
     // Add more formats as needed
     return nullptr; // Unsupported format
 }

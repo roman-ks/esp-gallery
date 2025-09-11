@@ -12,6 +12,7 @@ class GIFDecoder: public Decoder {
 
     public:
         GIFDecoder();
+        GIFDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories);
         ~GIFDecoder()=default;
 
         void init() override;
@@ -22,8 +23,8 @@ class GIFDecoder: public Decoder {
         static int32_t GIFSeekFile(GIFFILE *pFile, int32_t iPosition);
         static void GIFDraw(GIFDRAW *pDraw);
 
-        static void setIDrawTarget(IDrawTarget &cb){
-            iDrawTarget = &cb;
+        static void setIDrawTarget(IDrawTarget *target){
+            iDrawTarget = target;
         }
 
     private:

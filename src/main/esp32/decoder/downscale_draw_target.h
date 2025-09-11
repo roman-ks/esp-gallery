@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DelegatingDrawTarget.h"
+#include "delegating_draw_target.h"
 #include <cstdint>
 #include <vector>
 

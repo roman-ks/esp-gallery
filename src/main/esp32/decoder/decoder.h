@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "i_draw_target.h"
-#include "DelegatingDrawTarget.h"
+#include "delegating_draw_target.h"
 
 using DelegatingDrawTargetFactory = std::function<DelegatingDrawTarget*(IDrawTarget*)>;
 

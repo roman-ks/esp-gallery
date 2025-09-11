@@ -3,7 +3,7 @@
 #include "../decoder/gif_decoder.h"
 #include "../decoder/png_downscale_decoder.h"
 #include "../decoder/downscale_draw_target.h"
-#include "../decoder/DelegatingDrawTarget.h"
+#include "../decoder/delegating_draw_target.h"
 #include "png_image.h"
 #include "gif_image.h"
 #include "../log.h"

@@ -1,5 +1,6 @@
 #include "decoder.h"
 #include <stdlib.h>
+#include "../log.h"
 
 Decoder::~Decoder(){
     destroyWrappingDelegates();

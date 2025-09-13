@@ -5,7 +5,7 @@ GIFDecoder::GIFDecoder(){
     GIFDecoder::gif.begin(BIG_ENDIAN_PIXELS);
 }
 
-GIFDecoder::GIFDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories): Decoder(delegatingFactories){
+GIFDecoder::GIFDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories): AdvancableDecoder(delegatingFactories){
     GIFDecoder::gif.begin(BIG_ENDIAN_PIXELS);
 }
 
@@ -14,14 +14,17 @@ void GIFDecoder::init(){
 }
 
 void GIFDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget) {
-  setIDrawTarget(wrapWithDelegates(&iDrawTarget));
-  if(decodedPath.empty()){
+  if(decodedPath != std::string(filepath)){
     gif.open(filepath, &GIFDecoder::GIFOpenFile, &GIFDecoder::GIFCloseFile, 
             &GIFDecoder::GIFReadFile, &GIFDecoder::GIFSeekFile, &GIFDecoder::GIFDraw);
     decodedPath = std::string(filepath);
-  }else{
-      gif.playFrame(true, NULL);
   }
+  advance(iDrawTarget);
+}
+
+void GIFDecoder::advance(IDrawTarget &iDrawTarget){
+  setIDrawTarget(wrapWithDelegates(&iDrawTarget));
+  gif.playFrame(true, NULL);
   destroyWrappingDelegates();
 }
 

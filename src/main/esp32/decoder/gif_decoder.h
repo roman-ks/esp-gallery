@@ -1,6 +1,6 @@
 #pragma once
 
-#include "decoder.h"
+#include "../decoder/advancable_decoder.h"
 #include <FS.h>
 #include <AnimatedGIF.h>
 #define BUFFER_SIZE 256            // Optimum is >= GIF width or integral division of width
@@ -8,7 +8,7 @@
 #include <string>
 
 
-class GIFDecoder: public Decoder {
+class GIFDecoder: public AdvancableDecoder {
 
     public:
         GIFDecoder();
@@ -17,6 +17,8 @@ class GIFDecoder: public Decoder {
 
         void init() override;
         void decode(const char* filepath, IDrawTarget &iDrawTarget) override;
+        void advance(IDrawTarget &iDrawTarget) override;
+        
         static void * GIFOpenFile(const char *filename, int32_t *pSize);
         static void GIFCloseFile(void *pHandle);
         static int32_t GIFReadFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen);

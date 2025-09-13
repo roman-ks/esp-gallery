@@ -38,24 +38,18 @@ void setup() {
   
   tft.begin();
   renderer->init();
-  // controller.init();
-  // gallery.init();
+  controller.init();
+  gallery.init();
 
-  img = ImageFactory::createDownscaledImage("/dotpict_a_20250831_125038.gif");
-  img->setPosition(80, 80);
-  img->render(*renderer);
-
-//   // gif.begin(BIG_ENDIAN_PIXELS);
-//   LOG("\r\nInitialisation done.");
+  // img = ImageFactory::createDownscaledImage("/dotpict_a_20250831_125038.gif");
+  // img->setPosition(80, 80);
+  // img->render(*renderer);
 }
 
 void loop() {
-  img->render(*renderer);
+  // img->render(*renderer);
 
-  // controller.loop();
-//   // put your main code here, to run repeatedly:
-//   // gif.playFrame(true, NULL);
-//   // delay(100);
+  controller.loop();
 }
 
 // // unsigned char* encodeBase64(const uint8_t *input, size_t len){

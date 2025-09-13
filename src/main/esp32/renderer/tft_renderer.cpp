@@ -1,8 +1,11 @@
 #include "tft_renderer.h"
 
 #include "offsetting_draw_target.h"
+#include "capturing_draw_target.h"
+#include "pixels_holder.h"
 #include "../../core/configs.h"
 #include "../log.h"
+#include <memory>
 
 
 TFTRenderer::~TFTRenderer() {
@@ -18,13 +21,15 @@ void TFTRenderer::reset() {
 
 void TFTRenderer::render(const GIFImage &gifImage) {
     static uint16_t lastRenderedId = 0;
-    OffsettingDrawTarget drawTarget(*this, gifImage.xPos, gifImage.yPos);
+    OffsettingDrawTarget offsettingDrawTarget(*this, gifImage.xPos, gifImage.yPos);
     tft.startWrite(); // The TFT chip select is locked low
 
     if(lastRenderedId != gifImage.id){
-        gifImage.getDecoder().decode(gifImage.filePath, drawTarget);
+        CapturingDrawTarget capturingDrawTarget(&offsettingDrawTarget);
+        gifImage.getDecoder().decode(gifImage.filePath, capturingDrawTarget);
+        std::unique_ptr<PixelsHolder> pixelsHolder = capturingDrawTarget.getCaptured();
     } else {
-        gifImage.getDecoder().advance(drawTarget);
+        gifImage.getDecoder().advance(offsettingDrawTarget);
     }
     tft.endWrite(); // The TFT chip select is locked low
 }

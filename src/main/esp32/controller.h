@@ -3,25 +3,31 @@
 
 #include <map>
 #include "gallery.h"
+#include <atomic>
 
 #define SCROLL_LEFT_BUTTON 5
 #define ENTER_BUTTON 4
 
 class Controller {
     public:
-        Controller(Gallery &gallery) : gallery(gallery), buttonStates(){}
+        Controller(Gallery &gallery) : gallery(gallery){}
         ~Controller();
 
         void init();
         void loop();  
     private:
         Gallery &gallery;
-        std::map<int, bool> buttonStates;
+        inline static std::map<int, std::atomic<int>> buttonStates;
+        inline static std::map<int, uint32_t> lastButtonPresses;
         
         void handleLeftButtonPress();
         void handleEnterButtonPress();
         bool isButtonPressed(int pin);
+        void initButton(int pin, void isrFunc(void));
 
+        static void IRAM_ATTR leftISR();
+        static void IRAM_ATTR enterISR();
+        static void IRAM_ATTR handleISR(int pin);
 };
 
 #endif

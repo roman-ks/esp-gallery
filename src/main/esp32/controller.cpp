@@ -14,7 +14,7 @@ void Controller::init(){
 
 void Controller::initButton(int pin, void isrFunc(void)){
     pinMode(pin, INPUT_PULLUP);
-    buttonStates[pin] = HIGH;
+    buttonStates[pin] = 0;
     lastButtonPresses[pin] = 0;
     attachInterrupt(pin, isrFunc, FALLING);
 }
@@ -55,7 +55,6 @@ void Controller::handleLeftButtonPress(){
     } else {
         gallery.nextHighlight();
     }
-    // buttonStates[SCROLL_LEFT_BUTTON]--;
 }
 
 void Controller::handleEnterButtonPress(){
@@ -64,8 +63,6 @@ void Controller::handleEnterButtonPress(){
     } else {
         gallery.openImage();
     }
-    // buttonStates[ENTER_BUTTON]--;
-
 }
 
 bool Controller::isButtonPressed(int pin){

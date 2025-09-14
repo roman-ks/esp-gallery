@@ -28,7 +28,7 @@ void TFTRenderer::render(const GIFImage &gifImage) {
     if (gifImage.cachable) {
         renderCachable(offsettingDrawTarget, gifImage);
     } else {
-        LOGF("Not cachable %s: %d\n",gifImage.filePath, id);
+        // LOGF("Not cachable %s: %d\n",gifImage.filePath, id);
         if (lastRenderedId != id) {
             gifImage.getDecoder().decode(gifImage.filePath, offsettingDrawTarget);
             lastRenderedId = id;
@@ -42,7 +42,7 @@ void TFTRenderer::render(const GIFImage &gifImage) {
 void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
     uint16_t id = image.id;
     if (cache.find(id)!=cache.end()) {
-        LOGF("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cache[id]->width, cache[id]->height, cache[id]->pixels.size());
+        // LOGF("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cache[id]->width, cache[id]->height, cache[id]->pixels.size());
         delegate.setAddrWindow(0,0, cache[id]->width, cache[id]->height);
         auto pixels = cache[id]->pixels;
         delegate.pushPixels(pixels.data(), pixels.size());
@@ -50,7 +50,7 @@ void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
         CapturingDrawTarget capturingDrawTarget(&delegate);
         image.getDecoder().decode(image.filePath, capturingDrawTarget);
         cache[id] = capturingDrawTarget.getCaptured();
-        LOGF("Caching %s: %d (w:%d, h%d)\n",image.filePath, id, cache[id]->width, cache[id]->height);
+        // LOGF("Caching %s: %d (w:%d, h%d)\n",image.filePath, id, cache[id]->width, cache[id]->height);
     }
 }
 

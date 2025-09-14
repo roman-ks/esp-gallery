@@ -4,10 +4,12 @@
 #include "../decoder/png_downscale_decoder.h"
 #include "../decoder/downscale_draw_target.h"
 #include "../decoder/delegating_draw_target.h"
+#include "../decoder/overlay_draw_target.h"
 #include "png_image.h"
 #include "gif_image.h"
 #include "../log.h"
 #include "../../core/configs.h"
+#include "play_icon_overlay.h"
 
 Image* ImageFactory::createImage(const char* filePath) {
     std::string ext = getExtension(filePath);
@@ -32,11 +34,13 @@ Image* ImageFactory::createDownscaledImage(const char* filePath){
     } else if (ext == ".gif"){
         static std::vector<DelegatingDrawTargetFactory> delegatingFactories;
         if(delegatingFactories.empty()){
-            static DelegatingDrawTargetFactory factory = [](IDrawTarget *delegate)->DelegatingDrawTarget* { 
+            delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
+                return new OverlayDrawTarget(delegate, PlayIcon24x24, 24, 24, 0,0);
+            });
+            delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
                 return new DownscaleDrawTarget(delegate, 
                     THUMBNAIL_WIDTH_SCALE_FACTOR, THUMBNAIL_HEIGHT_SCALE_FACTOR);
-            };
-            delegatingFactories.push_back(factory);
+            });
         }
         static GIFDecoder gifDecoder(delegatingFactories);
         return new GIFImage(gifDecoder, strdup(filePath), true);

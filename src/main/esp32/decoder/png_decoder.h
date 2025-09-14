@@ -10,8 +10,10 @@
 
 class PNGDecoder : public Decoder {
     public:
-        PNGDecoder();
-        virtual ~PNGDecoder();
+        PNGDecoder() = default;
+        PNGDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories): Decoder(delegatingFactories){}
+
+        virtual ~PNGDecoder()=default;
 
         void init() override;
         void decode(const char* filepath, IDrawTarget &iDrawTarget) override;
@@ -23,16 +25,8 @@ class PNGDecoder : public Decoder {
             return png;
         }
 
-        static void setIDrawTarget(IDrawTarget &cb){
-            iDrawTarget = &cb;
-        }
-
-        static void resetIDrawTarget(){
-            iDrawTarget = nullptr;
-        }
-
-        static IDrawTarget &getIDrawTarget(){
-            return *iDrawTarget;
+        static void setIDrawTarget(IDrawTarget *target){
+            iDrawTarget = target;
         }
 
         void decode(const char* filepath, IDrawTarget &iDrawTarget, 

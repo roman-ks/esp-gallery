@@ -3,13 +3,6 @@
 #include <LittleFS.h>
 #include "../log.h"
 
-PNGDecoder::PNGDecoder() {
-}
-
-PNGDecoder::~PNGDecoder() {
-    PNGDecoder::resetIDrawTarget();
-}
-
 void PNGDecoder::init() {
     // Initialize PNG decoder if needed
 }
@@ -24,7 +17,7 @@ void PNGDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget,
                         PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB) {
     PNG &png = PNGDecoder::getPng();
     png.close();
-    PNGDecoder::setIDrawTarget(iDrawTarget);
+    setIDrawTarget(wrapWithDelegates(&iDrawTarget));
     LOG("Opening image..");
     int16_t rc = png.open(filepath, openCB, closeCB, readCB, seekCB, drawCB);
     if (rc == PNG_SUCCESS) {
@@ -41,7 +34,6 @@ void PNGDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget,
         // How long did rendering take...
         LOGF("Decoded in %dms\n", millis()-dt);
     }
-    PNGDecoder::resetIDrawTarget();
 }
 
 
@@ -80,8 +72,8 @@ int PNGDecoder::pngDraw(PNGDRAW *pDraw) {
     PNG &png = PNGDecoder::getPng();
     png.getLineAsRGB565(pDraw, PNGDecoder::getLineBuffer(), PNG_RGB565_BIG_ENDIAN, 0xffffffff);
 
-    getIDrawTarget().setAddrWindow(0, pDraw->y, pDraw->iWidth, 1);
-    getIDrawTarget().pushPixels(getLineBuffer(), pDraw->iWidth);
+    iDrawTarget->setAddrWindow(0, pDraw->y, pDraw->iWidth, 1);
+    iDrawTarget->pushPixels(getLineBuffer(), pDraw->iWidth);
     return 1;
 }
 

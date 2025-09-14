@@ -1,7 +1,6 @@
 #include "image_factory.h"
 #include "../decoder/png_decoder.h"
 #include "../decoder/gif_decoder.h"
-#include "../decoder/png_downscale_decoder.h"
 #include "../decoder/downscale_draw_target.h"
 #include "../decoder/delegating_draw_target.h"
 #include "../decoder/overlay_draw_target.h"
@@ -29,7 +28,12 @@ Image* ImageFactory::createDownscaledImage(const char* filePath){
     std::string ext = getExtension(filePath);
     LOGF("Creating image from file %s, ext: %s\n", filePath, filePath);
     if (ext == ".png") {
-        static PNGDownscaleDecoder pngDecoder;
+        static std::vector<DelegatingDrawTargetFactory> delegatingFactories;
+        delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
+                return new DownscaleDrawTarget(delegate, 
+                    THUMBNAIL_WIDTH_SCALE_FACTOR, THUMBNAIL_HEIGHT_SCALE_FACTOR);
+        });
+        static PNGDecoder pngDecoder(delegatingFactories);
         return new PNGImage(pngDecoder, strdup(filePath), true);
     } else if (ext == ".gif"){
         static std::vector<DelegatingDrawTargetFactory> delegatingFactories;

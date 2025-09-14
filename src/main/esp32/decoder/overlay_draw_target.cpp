@@ -55,8 +55,7 @@ void OverlayDrawTarget::pushPixels(const void *pixelsPtr, uint32_t count) {
         }
 
         // make a copy of the window pixels
-        for (uint32_t i = 0; i < count; ++i)
-            memcpy(m_outBuffer, src, count);
+        memcpy(m_outBuffer, src, count*sizeof(uint16_t));
 
         // overlay only on intersection area
         for (int iy = iy0; iy < iy1; ++iy) {

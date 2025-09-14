@@ -28,7 +28,7 @@ Image* ImageFactory::createDownscaledImage(const char* filePath){
     LOGF("Creating image from file %s, ext: %s\n", filePath, filePath);
     if (ext == ".png") {
         static PNGDownscaleDecoder pngDecoder;
-        return new PNGImage(pngDecoder, strdup(filePath));
+        return new PNGImage(pngDecoder, strdup(filePath), true);
     } else if (ext == ".gif"){
         static std::vector<DelegatingDrawTargetFactory> delegatingFactories;
         if(delegatingFactories.empty()){
@@ -39,7 +39,7 @@ Image* ImageFactory::createDownscaledImage(const char* filePath){
             delegatingFactories.push_back(factory);
         }
         static GIFDecoder gifDecoder(delegatingFactories);
-        return new GIFImage(gifDecoder, strdup(filePath));
+        return new GIFImage(gifDecoder, strdup(filePath), true);
     }
     // Add more formats as needed
     return nullptr; // Unsupported format

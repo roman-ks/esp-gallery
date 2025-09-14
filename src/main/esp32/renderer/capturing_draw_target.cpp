@@ -19,7 +19,8 @@ CapturingDrawTarget::~CapturingDrawTarget() {
 
 void CapturingDrawTarget::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (x + w > m_width) m_width = x + w;
-    if (y + h > m_height) m_height = y + h;
+    // h is an offset from y, so for one line h will be 0, but m_height has to be count of rows so do +1 to go from offset to count
+    if (y + h + 1 > m_height) m_height = y + h+1;
 
     m_windowX = x;
     m_windowY = y;
@@ -28,22 +29,21 @@ void CapturingDrawTarget::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint
 
     m_cursorX = 0;
     m_cursorY = 0;
-
     delegate->setAddrWindow(x,y,w,h);
 }
 
 void CapturingDrawTarget::pushPixels(const void *pixels, uint32_t count) {
     const uint16_t* src = static_cast<const uint16_t*>(pixels);
     size_t i = 0; // index in src
-
     // Fill combined buffer for the current window
-    for (uint16_t row = 0; row < m_windowH; ++row) {
+    for (uint16_t row = 0; row <= m_windowH; ++row) {
         for (uint16_t col = 0; col < m_windowW; ++col) {
             uint16_t absX = m_windowX + col;
             uint16_t absY = m_windowY + row;
             size_t index = absY * m_width + absX;
 
             m_pixels[index] = src[i];
+            i++;
         }
     }
 

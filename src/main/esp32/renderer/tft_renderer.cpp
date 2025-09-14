@@ -21,35 +21,54 @@ void TFTRenderer::reset() {
 
 void TFTRenderer::render(const GIFImage &gifImage) {
     static uint16_t lastRenderedId = 0;
-    OffsettingDrawTarget offsettingDrawTarget(*this, gifImage.xPos, gifImage.yPos);
+    OffsettingDrawTarget offsettingDrawTarget(this, gifImage.xPos, gifImage.yPos);
     tft.startWrite(); // The TFT chip select is locked low
 
-    if(lastRenderedId != gifImage.id){
-        CapturingDrawTarget capturingDrawTarget(&offsettingDrawTarget);
-        gifImage.getDecoder().decode(gifImage.filePath, capturingDrawTarget);
-        std::unique_ptr<PixelsHolder> pixelsHolder = capturingDrawTarget.getCaptured();
+    uint16_t id = gifImage.id;
+    if (gifImage.cachable) {
+        renderCachable(offsettingDrawTarget, gifImage);
     } else {
-        gifImage.getDecoder().advance(offsettingDrawTarget);
+        LOGF("Not cachable %s: %d\n",gifImage.filePath, id);
+        if (lastRenderedId != id) {
+            gifImage.getDecoder().decode(gifImage.filePath, offsettingDrawTarget);
+            lastRenderedId = id;
+        } else {
+            gifImage.getDecoder().advance(offsettingDrawTarget);
+        }
     }
     tft.endWrite(); // The TFT chip select is locked low
+}
+
+void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
+    uint16_t id = image.id;
+    if (cache.find(id)!=cache.end()) {
+        LOGF("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cache[id]->width, cache[id]->height, cache[id]->pixels.size());
+        delegate.setAddrWindow(0,0, cache[id]->width, cache[id]->height);
+        auto pixels = cache[id]->pixels;
+        delegate.pushPixels(pixels.data(), pixels.size());
+    } else {
+        CapturingDrawTarget capturingDrawTarget(&delegate);
+        image.getDecoder().decode(image.filePath, capturingDrawTarget);
+        cache[id] = capturingDrawTarget.getCaptured();
+        LOGF("Caching %s: %d (w:%d, h%d)\n",image.filePath, id, cache[id]->width, cache[id]->height);
+    }
 }
 
 void TFTRenderer::render(const PNGImage &pngImage) {
     static uint16_t lastRenderedId = 0;
     if(lastRenderedId == pngImage.id)
         return;
-    OffsettingDrawTarget drawTarget(*this, pngImage.xPos, pngImage.yPos);
+    OffsettingDrawTarget offsettingDrawTarget(this, pngImage.xPos, pngImage.yPos);
     tft.startWrite(); // The TFT chip select is locked low
 
-    pngImage.getDecoder().decode(pngImage.filePath, drawTarget);
+    if (pngImage.cachable) {
+        renderCachable(offsettingDrawTarget, pngImage);
+    } else {
+        pngImage.getDecoder().decode(pngImage.filePath, offsettingDrawTarget);
+    }
     tft.endWrite(); // The TFT chip select is locked low
 
     lastRenderedId = pngImage.id;
-}
-
-int TFTRenderer::drawImage(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *colors) {
-    tft.pushImage(x, y, w, h, colors);
-    return 1;
 }
 
 void TFTRenderer::renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 

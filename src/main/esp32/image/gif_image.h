@@ -8,6 +8,8 @@ class GIFImage : public Image {
     public:
         GIFImage(AdvancableDecoder &decoder, char* filePath): 
             Image(decoder, filePath){}
+        GIFImage(AdvancableDecoder &decoder, char* filePath, bool cachable): 
+            Image(decoder, filePath, cachable){}
         ~GIFImage() = default;
 
         void render(Renderer &rendered) const;

@@ -10,8 +10,9 @@ class Renderer;
 class Image {
     public:
         Image(Decoder &decoder, char* filePath) 
-            : decoder(decoder), filePath(filePath), id(instanceCounter++) {}
-
+            : Image(decoder, filePath, false) {}
+        Image(Decoder &decoder, char* filePath, bool cachable): 
+            decoder(decoder), filePath(filePath), id(instanceCounter++),cachable(cachable) {} 
         virtual void render(Renderer &rendered) const = 0;
 
         virtual Decoder& getDecoder() const {
@@ -25,6 +26,7 @@ class Image {
         uint16_t xPos = 0;
         uint16_t yPos = 0;
         const uint16_t id;
+        const bool cachable;
     protected:
         Decoder& decoder;
     private:

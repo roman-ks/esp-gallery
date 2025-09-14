@@ -7,6 +7,8 @@ class PNGImage : public Image {
     public:
         PNGImage(Decoder &decoder, char* filePath) 
             : Image(decoder, filePath) {}
+        PNGImage(Decoder &decoder, char* filePath, bool cachable) 
+            : Image(decoder, filePath, cachable) {}
         ~PNGImage()=default;
 
         void render(Renderer &rendered) const;

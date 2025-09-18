@@ -2,7 +2,6 @@
 #include "image/image_factory.h"
 #include "../core/configs.h"
 #include <cstring>
-#include "../core/img_holder.h"
 #include "thumbnail_utils.h"
 #include "log.h"
 
@@ -10,12 +9,11 @@ Gallery::~Gallery() {
 }
 
 void Gallery::init() {
-    
+    thumbnailsPerPage = GRID_MAX_COLS*GRID_MAX_ROWS;
     fs::File root = LittleFS.open("/", "r");
     while(fs::File file = root.openNextFile()){
         char buf[1000];
         snprintf(buf, sizeof(buf), "/%s", file.name());
-        LOGF("Found file: %s", buf);
         Image *img = ImageFactory::createImage(buf);
         if(img){
             img->setPosition(0,0); // todo decide where to set position
@@ -28,11 +26,13 @@ void Gallery::init() {
         }
 
     }
+    pageCount = thumbnails.size()/thumbnailsPerPage + (thumbnails.size()%thumbnailsPerPage==0 ? 0: 1);
     
-    LOGF("Found %d images\n", images.size());  
-    LOGF("Max cols: %d, max rows: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS);
+    LOGF("Found %d images for %d pages\n", images.size(), pageCount);  
+    LOGF("Max cols: %d, max rows: %d, thumbnails per page: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS, thumbnailsPerPage);
 
-    showThumbnails(thumbnails);
+    thumbnailsOnPage = getThumbnailsOnPage(0);
+    showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
 }
 
@@ -74,7 +74,7 @@ void Gallery::openImage(){
 void Gallery::closeImage(){
     imageIndex= -1;
     renderer.reset();
-    showThumbnails(thumbnails);
+    showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
 }
 
@@ -83,10 +83,21 @@ void Gallery::goToNextHighlightBox(){
   LOGF("Highlighting index %d\n", highlightIndex);
  
   
-  if(highlightIndex >= images.size()){
+  if(highlightIndex >= thumbnailsPerPage){
     LOG("Resetting highlight index");
     highlightIndex=0;
+    nextPage();
   }
+}
+
+void Gallery::nextPage(){
+    pageNum++;
+    if(pageNum > pageCount){
+      pageNum=0;
+    }
+    thumbnailsOnPage = getThumbnailsOnPage(pageNum);
+    renderer.reset();
+    showThumbnails();
 }
 
 void Gallery::drawHighlightBox(uint32_t color){
@@ -94,15 +105,15 @@ void Gallery::drawHighlightBox(uint32_t color){
     GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT, HIGHLIGHT_THICKNESS, color);
 }
 
-void Gallery::showThumbnails(std::vector<Image*> thumbnails){
-  for (size_t i = 0; i < thumbnails.size(); i++){
+void Gallery::showThumbnails(){
+  for (size_t i = 0; i < thumbnailsOnPage.size(); i++){
       showThumbnail(i);
   }
-  LOGF("Showing %d thumbnails\n", thumbnails.size());
+  LOGF("Showing %d thumbnails\n", thumbnailsOnPage.size());
 }
 
 void Gallery::showThumbnail(int i){
-    showThumbnail(thumbnails[i], getBoxX(i), getBoxY(i));
+    showThumbnail(thumbnailsOnPage[i], getBoxX(i), getBoxY(i));
 }
 
 void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
@@ -110,6 +121,13 @@ void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
     thumbnail->setPosition(x, y);
     thumbnail->render(renderer);
 }
+
+std::span<Image*> Gallery::getThumbnailsOnPage(uint8_t page){
+  int16_t pageStart = page * thumbnailsPerPage;
+  int16_t pageEnd = std::min<uint16_t>((page + 1) * thumbnailsPerPage, thumbnails.size() - pageStart);
+  return std::span{thumbnails.data() + pageStart, thumbnails.data() + pageEnd};
+}
+
 
 uint16_t Gallery::getBoxX(int i){
   return (i % GRID_MAX_COLS) * GRID_ELEMENT_WIDTH;

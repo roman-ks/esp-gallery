@@ -4,6 +4,7 @@
 #include "../decoder/downscale_draw_target.h"
 #include "../decoder/delegating_draw_target.h"
 #include "../decoder/overlay_draw_target.h"
+#include "../decoder/clipping_draw_target.h"
 #include "png_image.h"
 #include "gif_image.h"
 #include "../log.h"
@@ -30,6 +31,9 @@ Image* ImageFactory::createDownscaledImage(const char* filePath){
     if (ext == ".png") {
         static std::vector<DelegatingDrawTargetFactory> delegatingFactories;
         delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
+                return new ClippingDrawTarget(delegate, GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT);
+            });
+        delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
                 return new DownscaleDrawTarget(delegate, 
                     THUMBNAIL_WIDTH_SCALE_FACTOR, THUMBNAIL_HEIGHT_SCALE_FACTOR);
         });
@@ -40,6 +44,9 @@ Image* ImageFactory::createDownscaledImage(const char* filePath){
         if(delegatingFactories.empty()){
             delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
                 return new OverlayDrawTarget(delegate, PlayIcon24x24, 24, 24, 0,0);
+            });
+            delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
+                return new ClippingDrawTarget(delegate, GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT);
             });
             delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 
                 return new DownscaleDrawTarget(delegate, 

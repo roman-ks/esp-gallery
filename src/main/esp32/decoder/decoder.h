@@ -4,15 +4,25 @@
 #include <cstdint>
 #include <memory>
 
-using DrawCallbackFunc = std::function<int(uint16_t, uint16_t, uint16_t, uint16_t*)>;
+#include "i_draw_target.h"
+#include "delegating_draw_target.h"
+
+using DelegatingDrawTargetFactory = std::function<DelegatingDrawTarget*(IDrawTarget*)>;
 
 class Decoder {
     public:
-        ~Decoder() = default;
+        Decoder():delegatingFactories(), createdDelegates(){}
+        Decoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories)
+            :delegatingFactories(delegatingFactories), createdDelegates(){}
+        virtual ~Decoder();
 
-        virtual void init();
-        virtual void decode(const char* filepath, DrawCallbackFunc &drawCallback) = 0;
-    private:
+        virtual void init()=0;
+        virtual void decode(const char* filepath, IDrawTarget &iDrawTarget) = 0;
+        IDrawTarget* wrapWithDelegates(IDrawTarget *target); 
+        void destroyWrappingDelegates();      
+    protected:
+        std::vector<DelegatingDrawTargetFactory> delegatingFactories;
+        std::vector<void *> createdDelegates;
 };
 
 #endif

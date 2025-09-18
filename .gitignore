@@ -2,3 +2,5 @@ build/
 *.exe
 *.o
 *.png
+*.gif
+*.txt

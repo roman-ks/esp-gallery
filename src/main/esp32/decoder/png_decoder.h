@@ -10,11 +10,13 @@
 
 class PNGDecoder : public Decoder {
     public:
-        PNGDecoder();
-        ~PNGDecoder();
+        PNGDecoder() = default;
+        PNGDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories): Decoder(delegatingFactories){}
+
+        virtual ~PNGDecoder()=default;
 
         void init() override;
-        void decode(const char* filepath, DrawCallbackFunc &drawCallback) override;
+        void decode(const char* filepath, IDrawTarget &iDrawTarget) override;
     protected: 
         static uint16_t* getLineBuffer(){
             return lineBuffer;
@@ -23,19 +25,11 @@ class PNGDecoder : public Decoder {
             return png;
         }
 
-        static void setDrawCallback(DrawCallbackFunc &cb){
-            s_drawCallback = cb;
+        static void setIDrawTarget(IDrawTarget *target){
+            iDrawTarget = target;
         }
 
-        static void resetDrawCallback(){
-            s_drawCallback = nullptr;
-        }
-
-        static DrawCallbackFunc &getDrawCallback(){
-            return s_drawCallback;
-        }
-
-        void decode(const char* filepath, DrawCallbackFunc &drawCallback, 
+        void decode(const char* filepath, IDrawTarget &iDrawTarget, 
                         PNG_OPEN_CALLBACK *openCB, PNG_CLOSE_CALLBACK *closeCB,
                         PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB);
         static void * pngOpen(const char *filename, int32_t *size);
@@ -45,7 +39,7 @@ class PNGDecoder : public Decoder {
     private:
         static int pngDraw(PNGDRAW *pDraw);
 
-        inline static DrawCallbackFunc s_drawCallback = nullptr;
+        inline static IDrawTarget *iDrawTarget = nullptr;
         inline static std::unique_ptr<File> file = nullptr;
         inline static PNG png = PNG();
         inline static uint16_t lineBuffer[MAX_IMAGE_WIDTH];

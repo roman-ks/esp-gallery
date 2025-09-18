@@ -4,7 +4,6 @@
 #include "LittleFS.h"
 // #include <vector>
 // #include "mbedtls/base64.h"
-// #include <AnimatedGIF.h>
 #include "controller.h"
 #include "gallery.h"
 #include "renderer/tft_renderer.h"
@@ -20,7 +19,9 @@ std::unique_ptr<Renderer> renderer = std::make_unique<TFTRenderer>(tft);
 Gallery gallery(*renderer);
 Controller controller(gallery);
 
+Image *img;
 
+#include "image/image_factory.h"
 void setup() {
 
   Serial.begin(115200);
@@ -40,15 +41,15 @@ void setup() {
   controller.init();
   gallery.init();
 
-//   // gif.begin(BIG_ENDIAN_PIXELS);
-//   LOG("\r\nInitialisation done.");
+  // img = ImageFactory::createDownscaledImage("/dotpict_a_20250831_125038.gif");
+  // img->setPosition(80, 80);
+  // img->render(*renderer);
 }
 
 void loop() {
+  // img->render(*renderer);
+
   controller.loop();
-//   // put your main code here, to run repeatedly:
-//   // gif.playFrame(true, NULL);
-//   // delay(100);
 }
 
 // // unsigned char* encodeBase64(const uint8_t *input, size_t len){

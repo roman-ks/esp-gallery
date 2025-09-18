@@ -3,14 +3,37 @@
 
 
 Controller::~Controller() {
+    detachInterrupt(SCROLL_LEFT_BUTTON);
+    detachInterrupt(ENTER_BUTTON);
 }
 
 void Controller::init(){
-    pinMode(SCROLL_LEFT_BUTTON, INPUT_PULLUP);
-    pinMode(ENTER_BUTTON, INPUT_PULLUP);
+    initButton(SCROLL_LEFT_BUTTON, leftISR);
+    initButton(ENTER_BUTTON, enterISR);
+}
 
-    buttonStates[SCROLL_LEFT_BUTTON] = HIGH;
-    buttonStates[ENTER_BUTTON] = HIGH;
+void Controller::initButton(int pin, void isrFunc(void)){
+    pinMode(pin, INPUT_PULLUP);
+    buttonStates[pin] = 0;
+    lastButtonPresses[pin] = 0;
+    attachInterrupt(pin, isrFunc, FALLING);
+}
+
+void Controller::leftISR(){
+    handleISR(SCROLL_LEFT_BUTTON);
+}
+
+void Controller::enterISR(){
+    handleISR(ENTER_BUTTON);
+}
+
+void Controller::handleISR(int pin){
+    uint32_t time = millis();
+    // wait debounce time
+    if(time - lastButtonPresses[pin] > 200 ){
+        buttonStates[pin]++;
+        lastButtonPresses[pin]=time;
+    }
 }
 
 void Controller::loop(){
@@ -43,16 +66,10 @@ void Controller::handleEnterButtonPress(){
 }
 
 bool Controller::isButtonPressed(int pin){
-  int buttonState = digitalRead(pin);
-  bool pressed = false;
-  bool oldButtonState = buttonStates[pin];
-  if(oldButtonState == HIGH && buttonState == LOW){
-    pressed = true;
-  }
-  if(oldButtonState != buttonState){
-    buttonStates[pin] = buttonState;
-  }
-  oldButtonState = buttonState;
-  return pressed;
+    bool pressed = buttonStates[pin] > 0;
+    if(pressed){
+        buttonStates[pin]--;
+    } 
+    return pressed;
 }
 

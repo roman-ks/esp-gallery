@@ -3,6 +3,10 @@
 #include <typeinfo>
 #include <cstring>
 
+#ifndef LOG_LEVEL
+#define LOG_LEVEL 0 // 0 - TRACE, 1 - DEBUG, 2 - INFO, 3 - WARN, 4 - ERROR
+#endif
+
 inline const char* normalizePath(const char* path){
     static char buf[512];
     size_t len = strlen(path) + 1;
@@ -33,3 +37,36 @@ inline const char* createLoggerName(char *file, long line){
     do { \
         Serial.printf("%-40s " msg "\n", createLoggerName(__FILE__, __LINE__)); \
     } while(0)
+
+#if LOG_LEVEL <=1 
+#define LOGF_D(fmt, ...) \
+    do { \
+        Serial.printf("%-40s [DEBUG] " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
+    } while(0)
+#define LOG_D(msg) \
+    do { \
+        Serial.printf("%-40s [DEBUG] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
+    } while(0)
+    
+#define LOGF_I(fmt, ...) \
+    do { \
+        Serial.printf("%-40s [INFO ] " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
+    } while(0)
+
+#define LOG_I(msg) \
+    do { \
+        Serial.printf("%-40s [INFO ] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
+    } while(0)
+#elif LOG_LEVEL == 2 
+#define LOGF_D(fmt, ...)
+#define LOG_D(msg)
+#define LOGF_I(fmt, ...) \
+    do { \
+        Serial.printf("[INFO ] %-40s " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
+    } while(0)
+
+#define LOG_I(msg) \
+    do { \
+        Serial.printf("[INFO ] %-40s " msg "\n", createLoggerName(__FILE__, __LINE__)); \
+    } while(0)
+#endif

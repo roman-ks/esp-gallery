@@ -7,13 +7,14 @@
 #include "../decoder/clipping_draw_target.h"
 #include "png_image.h"
 #include "gif_image.h"
+#define LOG_LEVEL 2
 #include "../log.h"
 #include "../../core/configs.h"
 #include "play_icon_overlay.h"
 
 Image* ImageFactory::createImage(const char* filePath) {
     std::string ext = getExtension(filePath);
-    LOGF("Creating image from file %s, ext: %s\n", filePath, filePath);
+    LOGF_D("Creating image from file %s, ext: %s\n", filePath, filePath);
     if (ext == ".png") {
         static PNGDecoder pngDecoder;
         return new PNGImage(pngDecoder, strdup(filePath));
@@ -27,7 +28,7 @@ Image* ImageFactory::createImage(const char* filePath) {
 
 Image* ImageFactory::createDownscaledImage(const char* filePath){
     std::string ext = getExtension(filePath);
-    LOGF("Creating image from file %s, ext: %s\n", filePath, filePath);
+    LOGF_D("Creating image from file %s, ext: %s\n", filePath, filePath);
     if (ext == ".png") {
         static std::vector<DelegatingDrawTargetFactory> delegatingFactories;
         delegatingFactories.push_back([](IDrawTarget *delegate)->DelegatingDrawTarget* { 

@@ -28,8 +28,8 @@ void Gallery::init() {
     }
     pageCount = thumbnails.size()/thumbnailsPerPage + (thumbnails.size()%thumbnailsPerPage==0 ? 0: 1);
     
-    LOGF("Found %d images for %d pages\n", images.size(), pageCount);  
-    LOGF("Max cols: %d, max rows: %d, thumbnails per page: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS, thumbnailsPerPage);
+    LOGF_I("Found %d images for %d pages\n", images.size(), pageCount);  
+    LOGF_I("Max cols: %d, max rows: %d, thumbnails per page: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS, thumbnailsPerPage);
 
     thumbnailsOnPage = getThumbnailsOnPage(0);
     showThumbnails();
@@ -66,7 +66,7 @@ bool Gallery::isImageOpen(){
 }
 
 void Gallery::openImage(){
-    imageIndex = highlightIndex;
+    imageIndex = pageNum*thumbnailsPerPage + highlightIndex;
     renderer.reset();
     images[imageIndex]->render(renderer);
   }
@@ -76,15 +76,16 @@ void Gallery::closeImage(){
     renderer.reset();
     showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
+    // advance page
 }
 
 void Gallery::goToNextHighlightBox(){
   highlightIndex++;
-  LOGF("Highlighting index %d\n", highlightIndex);
+  LOGF_D("Highlighting index %d\n", highlightIndex);
  
   
   if(highlightIndex >= thumbnailsPerPage){
-    LOG("Resetting highlight index");
+    LOG_D("Resetting highlight index");
     highlightIndex=0;
     nextPage();
   }
@@ -96,6 +97,7 @@ void Gallery::nextPage(){
       pageNum=0;
     }
     thumbnailsOnPage = getThumbnailsOnPage(pageNum);
+    LOGF_D("Thumbnails on page %d: %d\n", pageNum, thumbnailsOnPage.size());
     renderer.reset();
     showThumbnails();
 }
@@ -109,7 +111,7 @@ void Gallery::showThumbnails(){
   for (size_t i = 0; i < thumbnailsOnPage.size(); i++){
       showThumbnail(i);
   }
-  LOGF("Showing %d thumbnails\n", thumbnailsOnPage.size());
+  LOGF_D("Showing %d thumbnails\n", thumbnailsOnPage.size());
 }
 
 void Gallery::showThumbnail(int i){
@@ -117,14 +119,20 @@ void Gallery::showThumbnail(int i){
 }
 
 void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
-    LOGF("Rendering thumbnail %s\n", thumbnail->filePath);
+    LOGF_D("Rendering thumbnail %s\n", thumbnail->filePath);
     thumbnail->setPosition(x, y);
     thumbnail->render(renderer);
 }
 
 std::span<Image*> Gallery::getThumbnailsOnPage(uint8_t page){
-  int16_t pageStart = page * thumbnailsPerPage;
-  int16_t pageEnd = std::min<uint16_t>((page + 1) * thumbnailsPerPage, thumbnails.size() - pageStart);
+  uint16_t pageStart = page * thumbnailsPerPage;
+  uint16_t pageEnd;
+  if(thumbnails.size() - pageStart >= thumbnailsPerPage){
+    pageEnd = pageStart + thumbnailsPerPage;
+  } else {
+    pageEnd = thumbnails.size();
+  }
+  LOGF_D("Page %d indexes: %d-%d(out of %d)\n", page, pageStart, pageEnd, thumbnails.size());
   return std::span{thumbnails.data() + pageStart, thumbnails.data() + pageEnd};
 }
 

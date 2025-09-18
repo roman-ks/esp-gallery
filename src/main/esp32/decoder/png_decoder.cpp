@@ -1,6 +1,7 @@
 #include "png_decoder.h"
 #include "../../core/configs.h"
 #include <LittleFS.h>
+#define LOG_LEVEL 2
 #include "../log.h"
 
 void PNGDecoder::init() {
@@ -18,21 +19,21 @@ void PNGDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget,
     PNG &png = PNGDecoder::getPng();
     png.close();
     setIDrawTarget(wrapWithDelegates(&iDrawTarget));
-    LOG("Opening image..");
+    LOG_D("Opening image..");
     int16_t rc = png.open(filepath, openCB, closeCB, readCB, seekCB, drawCB);
     if (rc == PNG_SUCCESS) {
-        LOGF("image specs: (%d x %d), %d bpp, pixel type: %d\n", 
+        LOGF_D("image specs: (%d x %d), %d bpp, pixel type: %d\n", 
             png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
         uint32_t dt = millis();
         if (png.getWidth() > MAX_IMAGE_WIDTH) {
-          LOG("Image too wide for allocated line buffer size!");
+          LOG_I("Image too wide for allocated line buffer size!");
         }
         else {
           rc = png.decode(NULL, 0);
           png.close();
         }
         // How long did rendering take...
-        LOGF("Decoded in %dms\n", millis()-dt);
+        LOGF_D("Decoded in %dms\n", millis()-dt);
     }
 }
 
@@ -40,10 +41,10 @@ void PNGDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget,
 
 
 void * PNGDecoder::pngOpen(const char *filename, int32_t *size) {
-  LOGF("Attempting to open %s\n", filename);
+  LOGF_D("Attempting to open %s\n", filename);
   PNGDecoder::file = std::make_unique<File>(LittleFS.open(filename, "r"));
   *size = PNGDecoder::file->size();
-  LOGF("File size: %d\n", *size);
+  LOGF_D("File size: %d\n", *size);
   return &PNGDecoder::file;
 }
 
@@ -55,14 +56,14 @@ void PNGDecoder::pngClose(void *handle) {
 }
 
 int32_t PNGDecoder::pngRead(PNGFILE *page, uint8_t *buffer, int32_t length) {
-  LOG("pngRead");
+  LOG_D("pngRead");
   if (!PNGDecoder::file) return 0;
   page = page; // Avoid warning
   return PNGDecoder::file->read(buffer, length);
 }
 
 int32_t PNGDecoder::pngSeek(PNGFILE *page, int32_t position) {
-  LOG("pngSeek");
+  LOG_D("pngSeek");
   if (!PNGDecoder::file) return 0;
   page = page; // Avoid warning
   return PNGDecoder::file->seek(position);

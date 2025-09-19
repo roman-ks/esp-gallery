@@ -16,7 +16,7 @@ class GIFDecoder: public AdvancableDecoder {
         ~GIFDecoder()=default;
 
         void init() override;
-        void decode(const char* filepath, IDrawTarget &iDrawTarget) override;
+        void decode(const std::string &filepath, IDrawTarget &iDrawTarget) override;
         void advance(IDrawTarget &iDrawTarget) override;
         
         static void * GIFOpenFile(const char *filename, int32_t *pSize);

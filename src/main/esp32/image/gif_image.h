@@ -6,9 +6,9 @@
 
 class GIFImage : public Image {
     public:
-        GIFImage(AdvancableDecoder &decoder, char* filePath): 
+        GIFImage(AdvancableDecoder &decoder, std::string filePath): 
             Image(decoder, filePath){}
-        GIFImage(AdvancableDecoder &decoder, char* filePath, bool cachable): 
+        GIFImage(AdvancableDecoder &decoder, std::string filePath, bool cachable): 
             Image(decoder, filePath, cachable){}
         ~GIFImage() = default;
 

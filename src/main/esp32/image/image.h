@@ -3,15 +3,16 @@
 
 #include <cstdint>
 #include "../decoder/decoder.h"
+#include <string>
 
 // forward declare to break header circular dependency
 class Renderer;
 
 class Image {
     public:
-        Image(Decoder &decoder, char* filePath) 
+        Image(Decoder &decoder, std::string filePath) 
             : Image(decoder, filePath, false) {}
-        Image(Decoder &decoder, char* filePath, bool cachable): 
+        Image(Decoder &decoder, std::string filePath, bool cachable): 
             decoder(decoder), filePath(filePath), id(instanceCounter++),cachable(cachable) {} 
         virtual void render(Renderer &rendered) const = 0;
 
@@ -22,7 +23,7 @@ class Image {
         void setPosition(uint16_t x, uint16_t y) { 
             xPos = x; yPos = y; 
         }
-        const char* filePath;
+        const std::string filePath;
         uint16_t xPos = 0;
         uint16_t yPos = 0;
         const uint16_t id;

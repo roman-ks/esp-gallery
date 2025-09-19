@@ -8,19 +8,19 @@ void PNGDecoder::init() {
     // Initialize PNG decoder if needed
 }
 
-void PNGDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget) {
+void PNGDecoder::decode(const std::string &filepath, IDrawTarget &iDrawTarget) {
     decode(filepath, iDrawTarget, &PNGDecoder::pngOpen, &PNGDecoder::pngClose,
         &PNGDecoder::pngRead, &PNGDecoder::pngSeek, &PNGDecoder::pngDraw);
 }
 
-void PNGDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget,
+void PNGDecoder::decode(const std::string &filepath, IDrawTarget &iDrawTarget,
                         PNG_OPEN_CALLBACK *openCB, PNG_CLOSE_CALLBACK *closeCB,
                         PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB) {
     PNG &png = PNGDecoder::getPng();
     png.close();
     setIDrawTarget(wrapWithDelegates(&iDrawTarget));
     LOG_D("Opening image..");
-    int16_t rc = png.open(filepath, openCB, closeCB, readCB, seekCB, drawCB);
+    int16_t rc = png.open(filepath.c_str(), openCB, closeCB, readCB, seekCB, drawCB);
     if (rc == PNG_SUCCESS) {
         LOGF_D("image specs: (%d x %d), %d bpp, pixel type: %d\n", 
             png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());

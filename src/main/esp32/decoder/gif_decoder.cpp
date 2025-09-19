@@ -13,9 +13,9 @@ GIFDecoder::GIFDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFacto
 void GIFDecoder::init(){
 }
 
-void GIFDecoder::decode(const char* filepath, IDrawTarget &iDrawTarget) {
+void GIFDecoder::decode(const std::string &filepath, IDrawTarget &iDrawTarget) {
   if(decodedPath != std::string(filepath)){
-    gif.open(filepath, &GIFDecoder::GIFOpenFile, &GIFDecoder::GIFCloseFile, 
+    gif.open(filepath.c_str(), &GIFDecoder::GIFOpenFile, &GIFDecoder::GIFCloseFile, 
             &GIFDecoder::GIFReadFile, &GIFDecoder::GIFSeekFile, &GIFDecoder::GIFDraw);
     decodedPath = std::string(filepath);
   }

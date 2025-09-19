@@ -41,15 +41,16 @@ void TFTRenderer::render(const GIFImage &gifImage) {
 
 void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
     uint16_t id = image.id;
-    if (cache.find(id)!=cache.end()) {
+    if (cache.exists(image.filePath)) {
+        PixelsHolder &cached = cache.get(image.filePath);
         // LOGF("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cache[id]->width, cache[id]->height, cache[id]->pixels.size());
-        delegate.setAddrWindow(0,0, cache[id]->width, cache[id]->height);
-        auto pixels = cache[id]->pixels;
+        delegate.setAddrWindow(0,0, cached.width, cached.height);
+        auto pixels = cached.pixels;
         delegate.pushPixels(pixels.data(), pixels.size());
     } else {
         CapturingDrawTarget capturingDrawTarget(&delegate);
         image.getDecoder().decode(image.filePath, capturingDrawTarget);
-        cache[id] = capturingDrawTarget.getCaptured();
+        cache.put(image.filePath, std::move(capturingDrawTarget.getCaptured()));
         // LOGF("Caching %s: %d (w:%d, h%d)\n",image.filePath, id, cache[id]->width, cache[id]->height);
     }
 }

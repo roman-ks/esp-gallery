@@ -5,11 +5,12 @@
 #include <TFT_eSPI.h>
 #include <map>
 #include "pixels_holder.h"
+#include "renderer_cache.h"
 
 class TFTRenderer : public Renderer {
     public:
-        TFTRenderer(TFT_eSPI &tft)
-            : tft(tft), cache() {}
+        TFTRenderer(TFT_eSPI &tft, RendererCache &cache)
+            : tft(tft), cache(cache) {}
         ~TFTRenderer();
 
         void init() override;
@@ -24,7 +25,7 @@ class TFTRenderer : public Renderer {
 
     private:
         TFT_eSPI &tft;
-        std::map<uint16_t, std::unique_ptr<PixelsHolder>> cache;
+        RendererCache &cache;
 
         void renderCachable(IDrawTarget &delegate, const Image &image);
 

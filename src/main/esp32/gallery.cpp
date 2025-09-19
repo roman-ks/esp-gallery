@@ -14,13 +14,13 @@ void Gallery::init() {
     while(fs::File file = root.openNextFile()){
         char buf[1000];
         snprintf(buf, sizeof(buf), "/%s", file.name());
-        Image *img = ImageFactory::createImage(buf);
+        Image *img = ImageFactory::createImage(std::string(buf));
         if(img){
             img->setPosition(0,0); // todo decide where to set position
             images.push_back(img);
         }
 
-        Image *thumbnail = ImageFactory::createDownscaledImage(buf);
+        Image *thumbnail = ImageFactory::createDownscaledImage(std::string(buf));
         if(thumbnail){
           thumbnails.push_back(thumbnail);
         }
@@ -119,7 +119,7 @@ void Gallery::showThumbnail(int i){
 }
 
 void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
-    LOGF_D("Rendering thumbnail %s\n", thumbnail->filePath);
+    LOGF_D("Rendering thumbnail %s\n", thumbnail->filePath.c_str());
     thumbnail->setPosition(x, y);
     thumbnail->render(renderer);
 }

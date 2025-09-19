@@ -17,7 +17,7 @@ class Decoder {
         virtual ~Decoder();
 
         virtual void init()=0;
-        virtual void decode(const char* filepath, IDrawTarget &iDrawTarget) = 0;
+        virtual void decode(const std::string &filepath, IDrawTarget &iDrawTarget) = 0;
         IDrawTarget* wrapWithDelegates(IDrawTarget *target); 
         void destroyWrappingDelegates();      
     protected:

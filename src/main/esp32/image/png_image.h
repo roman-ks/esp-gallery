@@ -5,9 +5,9 @@
 
 class PNGImage : public Image {
     public:
-        PNGImage(Decoder &decoder, char* filePath) 
+        PNGImage(Decoder &decoder, std::string filePath) 
             : Image(decoder, filePath) {}
-        PNGImage(Decoder &decoder, char* filePath, bool cachable) 
+        PNGImage(Decoder &decoder, std::string filePath, bool cachable) 
             : Image(decoder, filePath, cachable) {}
         ~PNGImage()=default;
 

@@ -5,12 +5,12 @@
 
 class ImageFactory {
     public:
-        static Image* createImage(const char* filePath);
-        static Image* createDownscaledImage(const char* filePath);
+        static Image* createImage(const std::string &filePath);
+        static Image* createDownscaledImage(const std::string &filePath);
     private:
         ImageFactory() = default;
 
-        static std::string getExtension(const char* filePath);
+        static std::string getExtension(const std::string &filePath);
 };
 
 #endif

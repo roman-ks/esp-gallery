@@ -16,7 +16,7 @@ class PNGDecoder : public Decoder {
         virtual ~PNGDecoder()=default;
 
         void init() override;
-        void decode(const char* filepath, IDrawTarget &iDrawTarget) override;
+        void decode(const std::string &filepath, IDrawTarget &iDrawTarget) override;
     protected: 
         static uint16_t* getLineBuffer(){
             return lineBuffer;
@@ -29,7 +29,7 @@ class PNGDecoder : public Decoder {
             iDrawTarget = target;
         }
 
-        void decode(const char* filepath, IDrawTarget &iDrawTarget, 
+        void decode(const std::string &filepath, IDrawTarget &iDrawTarget, 
                         PNG_OPEN_CALLBACK *openCB, PNG_CLOSE_CALLBACK *closeCB,
                         PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB);
         static void * pngOpen(const char *filename, int32_t *size);

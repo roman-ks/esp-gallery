@@ -10,11 +10,13 @@
 #include "image/image.h"
 #include "renderer/renderer.h"
 #include <span>
+#include "renderer/renderer_cache.h"
 
 class Gallery {
     public:
-        Gallery(Renderer &renderer): 
-            renderer(renderer), images(), thumbnails() {};
+        Gallery(Renderer &renderer, RendererCache &rendererCache): 
+            renderer(renderer), rendererCache(rendererCache), 
+            images(), thumbnails() {};
         ~Gallery();
 
         void init();
@@ -27,7 +29,8 @@ class Gallery {
         void closeImage();
 
     private:
-        Renderer &renderer;  
+        Renderer &renderer; 
+        RendererCache &rendererCache; 
         std::vector<Image*> images;
         std::vector<Image*> thumbnails;
         std::span<Image*> thumbnailsOnPage;
@@ -36,6 +39,7 @@ class Gallery {
         int pageNum = 0;
         int pageCount = 0;
         int thumbnailsPerPage=0;
+        int lastLoadedThumbnailIndex = 0;
 
         void goToNextHighlightBox();
         void drawHighlightBox(uint32_t);

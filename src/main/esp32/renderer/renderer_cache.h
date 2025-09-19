@@ -18,7 +18,9 @@ class RendererCache {
         PixelsHolder& get(const std::string &key);
         void put(const std::string &key, std::unique_ptr<PixelsHolder> value);
         void write(const std::string &key, const PixelsHolder &value);
+        void handleInvalidWrite(fs::File &file, std::string &filename);
         std::unique_ptr<PixelsHolder> load(const std::string &key);
+        bool loadAndCache(const std::string &key);
 
         void createDir(const std::string &filepath);
 

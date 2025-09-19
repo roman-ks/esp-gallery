@@ -40,7 +40,7 @@ void setup() {
   
   rendererCache = std::make_unique<RendererCache>(LittleFS); 
   renderer = std::make_unique<TFTRenderer>(tft, *rendererCache);
-  gallery = std::make_unique<Gallery>(*renderer);
+  gallery = std::make_unique<Gallery>(*renderer, *rendererCache);
   controller = std::make_unique<Controller>(*gallery);
 
   tft.begin();

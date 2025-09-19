@@ -41,6 +41,16 @@ void Gallery::init() {
 void Gallery::draw(){
     if(imageIndex >= 0){
         images[imageIndex]->render(renderer);
+    } else {
+        if(lastLoadedThumbnailIndex<thumbnailsPerPage){
+            int nextPage = pageNum+1;
+            if(nextPage > pageCount)
+                return;
+            int nextThumb = std::min<int>(lastLoadedThumbnailIndex+nextPage*thumbnailsPerPage, thumbnails.size()-1);
+            rendererCache.loadAndCache(thumbnails[nextThumb]->filePath);
+            LOG_D("Finished load");
+            lastLoadedThumbnailIndex++;
+        }
     }
 }
 
@@ -85,8 +95,8 @@ void Gallery::goToNextHighlightBox(){
   highlightIndex++;
   LOGF_D("Highlighting index %d\n", highlightIndex);
  
-  
-  if(highlightIndex >= thumbnailsPerPage){
+  // todo fix highlighIndex going out of oounds here
+  if(highlightIndex >= thumbnailsPerPage || highlightIndex+ pageNum*thumbnailsPerPage>= thumbnails.size()-1){
     LOG_D("Resetting highlight index");
     highlightIndex=0;
     nextPage();
@@ -94,6 +104,7 @@ void Gallery::goToNextHighlightBox(){
 }
 
 void Gallery::nextPage(){
+    lastLoadedThumbnailIndex = 0;
     pageNum++;
     if(pageNum > pageCount){
       pageNum=0;

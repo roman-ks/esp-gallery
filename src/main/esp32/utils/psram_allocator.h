@@ -1,5 +1,6 @@
 #include <stdlib.h>
-#include <Arduino.h>
+#include "esp32-hal-psram.h"
+#include "../log.h"
 
 template <typename T>
 class PsramAllocator {
@@ -14,6 +15,8 @@ public:
     constexpr PsramAllocator(const PsramAllocator<U>&) noexcept {}
 
     T* allocate(std::size_t n) {
+        // LOGF_D("PSRAM: Size: %d, free: %d, min free %d, max alloc %d , desired size: %d\n", 
+        //     ESP.getPsramSize(), ESP.getFreePsram(), ESP.getMinFreePsram(), ESP.getMaxAllocPsram(), n * sizeof(T));
         void* p = ps_malloc(n * sizeof(T));
         if (!p) throw std::bad_alloc();
         return static_cast<T*>(p);

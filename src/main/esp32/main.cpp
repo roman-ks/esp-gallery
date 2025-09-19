@@ -9,15 +9,17 @@
 #include "renderer/tft_renderer.h"
 #include <memory>
 #include "log.h"
+#include "renderer/renderer_cache.h"
 
 // // Include the TFT library https://github.com/Bodmer/TFT_eSPI
 #include "SPI.h"
 #include <TFT_eSPI.h>              // Hardware-specific library
 TFT_eSPI tft = TFT_eSPI();         // Invoke custom library
 
-std::unique_ptr<Renderer> renderer = std::make_unique<TFTRenderer>(tft);
-Gallery gallery(*renderer);
-Controller controller(gallery);
+std::unique_ptr<RendererCache> rendererCache; 
+std::unique_ptr<Renderer> renderer;
+std::unique_ptr<Gallery> gallery;
+std::unique_ptr<Controller> controller;
 
 Image *img;
 
@@ -36,20 +38,19 @@ void setup() {
     return;
   }
   
+  rendererCache = std::make_unique<RendererCache>(LittleFS); 
+  renderer = std::make_unique<TFTRenderer>(tft, *rendererCache);
+  gallery = std::make_unique<Gallery>(*renderer);
+  controller = std::make_unique<Controller>(*gallery);
+
   tft.begin();
   renderer->init();
-  controller.init();
-  gallery.init();
-
-  // img = ImageFactory::createDownscaledImage("/dotpict_a_20250831_125038.gif");
-  // img->setPosition(80, 80);
-  // img->render(*renderer);
+  controller->init();
+  gallery->init();
 }
 
 void loop() {
-  // img->render(*renderer);
-
-  controller.loop();
+  controller->loop();
 }
 
 // // unsigned char* encodeBase64(const uint8_t *input, size_t len){

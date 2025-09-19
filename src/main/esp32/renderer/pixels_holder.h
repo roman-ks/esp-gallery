@@ -15,4 +15,9 @@ class PixelsHolder {
               this->pixels = psram_vector<uint16_t>(pixels, pixels+size_t(width)*height);
         }
 
+        PixelsHolder(uint16_t width, uint16_t height, psram_vector<uint16_t>&& pixels_vector): 
+            width(width), height(height){
+              this->pixels = std::move(pixels_vector);
+        }
+
 };

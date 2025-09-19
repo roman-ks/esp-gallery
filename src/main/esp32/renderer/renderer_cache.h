@@ -5,17 +5,21 @@
 #include "FS.h"
 #include <span>
 #include <memory>
+#include <unordered_set>
 
 class RendererCache {
     private:
         std::unordered_map<std::string, std::unique_ptr<PixelsHolder>> cache;
-        // fs::File cacheRoot;
+        std::unordered_set<std::string> written;
+        fs::FS fileSys;
     public:
-        RendererCache():cache(){}
+        RendererCache(fs::FS fileSys);
         bool exists(const std::string &key);
         PixelsHolder& get(const std::string &key);
         void put(const std::string &key, std::unique_ptr<PixelsHolder> value);
-        void write();
-        void load(std::span<std::string> keys);
+        void write(const std::string &key, const PixelsHolder &value);
+        std::unique_ptr<PixelsHolder> load(const std::string &key);
+
+        void createDir(const std::string &filepath);
 
 };

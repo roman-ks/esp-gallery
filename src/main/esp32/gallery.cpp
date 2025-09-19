@@ -12,6 +12,8 @@ void Gallery::init() {
     thumbnailsPerPage = GRID_MAX_COLS*GRID_MAX_ROWS;
     fs::File root = LittleFS.open("/", "r");
     while(fs::File file = root.openNextFile()){
+        if(file.isDirectory())
+          continue;
         char buf[1000];
         snprintf(buf, sizeof(buf), "/%s", file.name());
         Image *img = ImageFactory::createImage(std::string(buf));

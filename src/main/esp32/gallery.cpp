@@ -85,7 +85,6 @@ void Gallery::openImage(){
 void Gallery::closeImage(){
     pageNum = imageIndex/thumbnailsPerPage;
     highlightIndex = imageIndex % thumbnailsPerPage;
-    LOGF_D("PageNum: %d, hl index: %d\n", pageNum, highlightIndex);
     imageIndex= -1;
     thumbnailsOnPage = getThumbnailsOnPage(pageNum);
     renderer.reset();

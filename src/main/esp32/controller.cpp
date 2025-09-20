@@ -3,12 +3,12 @@
 
 
 Controller::~Controller() {
-    detachInterrupt(SCROLL_LEFT_BUTTON);
+    detachInterrupt(SCROLL_RIGHT_BUTTON);
     detachInterrupt(ENTER_BUTTON);
 }
 
 void Controller::init(){
-    initButton(SCROLL_LEFT_BUTTON, leftISR);
+    initButton(SCROLL_RIGHT_BUTTON, rightISR);
     initButton(ENTER_BUTTON, enterISR);
 }
 
@@ -19,8 +19,8 @@ void Controller::initButton(int pin, void isrFunc(void)){
     attachInterrupt(pin, isrFunc, FALLING);
 }
 
-void Controller::leftISR(){
-    handleISR(SCROLL_LEFT_BUTTON);
+void Controller::rightISR(){
+    handleISR(SCROLL_RIGHT_BUTTON);
 }
 
 void Controller::enterISR(){
@@ -37,9 +37,9 @@ void Controller::handleISR(int pin){
 }
 
 void Controller::loop(){
-    if(isButtonPressed(SCROLL_LEFT_BUTTON)){
-        LOG("Scroll left button pressed");
-        handleLeftButtonPress();
+    if(isButtonPressed(SCROLL_RIGHT_BUTTON)){
+        LOG("Scroll right button pressed");
+        handleRightButtonPress();
     } else if(isButtonPressed(ENTER_BUTTON)){
         LOG("Enter button pressed");
         handleEnterButtonPress();
@@ -49,7 +49,7 @@ void Controller::loop(){
     }
 }
 
-void Controller::handleLeftButtonPress(){
+void Controller::handleRightButtonPress(){
     if(gallery.isImageOpen()){
         gallery.nextImage();
     } else {

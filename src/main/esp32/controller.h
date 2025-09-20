@@ -18,8 +18,8 @@ class Controller {
     private:
         Gallery &gallery;
         inline static std::map<int, bool> buttonPressed;
-        inline static std::map<int, uint32_t> buttonRisingTime;
-        inline static std::map<int, uint32_t> buttonFallingTime;
+        inline static std::map<int, uint64_t> buttonRisingTime;
+        inline static std::map<int, uint64_t> buttonFallingTime;
         inline static std::map<int, std::atomic<int>> buttonStates;
         std::map<int, uint32_t> buttonEventHandledTime;
         
@@ -40,6 +40,8 @@ class Controller {
 
         // static void IRAM_ATTR enterISR();
         static void IRAM_ATTR handleISR(int pin);
+
+        static uint64_t IRAM_ATTR nowMicros();
 };
 
 #endif

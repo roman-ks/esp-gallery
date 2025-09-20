@@ -1,8 +1,9 @@
 #include "controller.h"
 #include "log.h"
 
-#define LONG_PRESS_THRESHOLD 100
-#define LONG_PRESS_INTERVAL 500
+// in micros
+#define LONG_PRESS_THRESHOLD 100000
+#define LONG_PRESS_INTERVAL 500000
 
 
 Controller::~Controller() {
@@ -22,35 +23,33 @@ void Controller::init(){
 }
 
 void Controller::initNavButton(int pin, void isrFallingFunc(void), void isrRisingFunc(void)){
-    initButton(pin, isrFallingFunc);
-    buttonRisingTime[pin] = 0;
-    attachInterrupt(pin, isrRisingFunc, RISING);
+    // initButton(pin, isrFallingFunc);
+    // buttonRisingTime[pin] = 0;
+    // attachInterrupt(pin, isrRisingFunc, RISING);
 }
 
 void Controller::initButton(int pin, void isrFallingFunc(void)){
-    pinMode(pin, INPUT_PULLUP);
-    buttonStates[pin] = 0;
-    buttonFallingTime[pin] = 0;
-    attachInterrupt(pin, isrFallingFunc, FALLING);
+    // pinMode(pin, INPUT_PULLUP);
+    // buttonStates[pin] = 0;
+    // buttonFallingTime[pin] = 0;
+    // attachInterrupt(pin, isrFallingFunc, FALLING);
 }
 
 void Controller::rightFallingISR(){
-    buttonFallingTime[SCROLL_RIGHT_BUTTON]=millis();
+    // buttonFallingTime[SCROLL_RIGHT_BUTTON]=millis();
 }
 
 void Controller::rightRisingISR(){
-    buttonRisingTime[SCROLL_RIGHT_BUTTON]=millis();
+    // buttonRisingTime[SCROLL_RIGHT_BUTTON]=millis();
 }
 
 void Controller::rightChangeISR(){
     int signal = digitalRead(SCROLL_RIGHT_BUTTON);
     if(signal == LOW){
         // LOW means pressed
-        buttonFallingTime[SCROLL_RIGHT_BUTTON] = millis();
-        buttonPressed[SCROLL_RIGHT_BUTTON] = false;
-    }else{
-        buttonRisingTime[SCROLL_RIGHT_BUTTON] = millis();
-        buttonPressed[SCROLL_RIGHT_BUTTON] = true;
+        buttonFallingTime[SCROLL_RIGHT_BUTTON] = nowMicros();
+    } else {
+        buttonRisingTime[SCROLL_RIGHT_BUTTON] = nowMicros();
     }
 }
 
@@ -130,10 +129,10 @@ bool Controller::isButtonPressed(int pin){
 }
 
 bool Controller::isButtonLongPressed(int pin){
-    uint32_t lastFalling = buttonFallingTime[pin];
-    uint32_t lastRising = buttonRisingTime[pin];
+    uint64_t lastFalling = buttonFallingTime[pin];
+    uint64_t lastRising = buttonRisingTime[pin];
 
-    LOGF_D("Last falling: %d, raising: %d\n", lastFalling, lastRising);
+    LOGF_D("Last falling: %llu, raising: %llu\n", lastFalling, lastRising);
     if(lastFalling==0){
         return false;
     }
@@ -141,7 +140,7 @@ bool Controller::isButtonLongPressed(int pin){
     if(lastRising >= lastFalling){
         return false;
     }
-    uint32_t now = millis();
+    uint64_t now = nowMicros();
     if(now-lastFalling > LONG_PRESS_THRESHOLD){
         if(now - buttonEventHandledTime[pin] > LONG_PRESS_INTERVAL){
             buttonEventHandledTime[pin] = now;
@@ -151,3 +150,12 @@ bool Controller::isButtonLongPressed(int pin){
     return false;
 }
 
+
+uint64_t Controller::nowMicros(){
+    // drop last digit
+    uint64_t ms = millis()/10;
+    // get last 4 digits, containing up to 9 full millis and up to 999 micros
+    uint32_t mcrs =  micros() % 10000;
+
+    return ms * 10000 + mcrs;
+}

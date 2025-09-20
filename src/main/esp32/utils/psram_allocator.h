@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "esp32-hal-psram.h"
-#include "../log.h"
+// #include "../log.h"
 
 template <typename T>
 class PsramAllocator {

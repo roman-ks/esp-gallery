@@ -1,11 +1,13 @@
 #include "renderer_cache.h"
-#define LOG_LEVEL 1
+#define LOG_LEVEL 2
 #include "../log.h"
 #include <cstdLib>
+#include "../../core/configs.h"
 
 
 RendererCache::RendererCache(fs::FS fileSys):fileSys(fileSys), cache(), written(){
     createDir(std::string("/c"));
+    LOGF_D("Log level %d", LOG_LEVEL);
 }
 
 void RendererCache::createDir(const std::string &filepath){
@@ -55,12 +57,13 @@ void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHold
         return;
 
     std::string binFilename = std::string("/c")+key+".b";
-    // std::string mdFilename = std::string("/c")+key+".m";
 
     if(fileSys.exists(binFilename.c_str()) /*&& fileSys.exists(mdFilename.c_str())*/){
         written.insert(std::string(key));
         return;        
     }
+    std::string tmpFilename = std::string("/c/tmp.b");
+
 
     LOGF_D("Starting to write %s to write %d pixels\n", binFilename.c_str(), pixelsHolder.pixels.size());
 
@@ -92,6 +95,7 @@ void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHold
     }
     file.close();
 
+    fileSys.rename(tmpFilename.c_str(), binFilename.c_str());
     uint32_t end = millis();
     float speed = pixelsHolder.pixels.size()*sizeof(uint16_t)/(static_cast<float>(end-start)/1000);
     LOGF_D("Written %s in %dms (%.1f B/s)\n", binFilename.c_str(), end-start, speed);
@@ -131,6 +135,13 @@ std::unique_ptr<PixelsHolder> RendererCache::load(const std::string &key){
     uint16_t h = mdBuf[1]<<8 | mdBuf[0];
     LOGF_D("W: %d, H: %d\n", w,h);
 
+    if(w > MAX_IMAGE_WIDTH || h > MAX_IMAGE_HEIGHT){
+        // invalid cached item delete to be retried
+        file.close();
+        bool removed = fileSys.remove(binFilename.c_str());
+        LOGF_I("Removed invalid file with w: %d, h: %d. Result %d\n", w, h, removed);
+        return nullptr;
+    }
     file.seek(4);
     auto pixels = psram_vector<uint16_t>(w*h);
     start = millis();

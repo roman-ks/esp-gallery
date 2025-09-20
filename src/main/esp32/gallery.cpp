@@ -83,11 +83,14 @@ void Gallery::openImage(){
   }
 
 void Gallery::closeImage(){
+    pageNum = imageIndex/thumbnailsPerPage;
+    highlightIndex = imageIndex % thumbnailsPerPage;
+    LOGF_D("PageNum: %d, hl index: %d\n", pageNum, highlightIndex);
     imageIndex= -1;
+    thumbnailsOnPage = getThumbnailsOnPage(pageNum);
     renderer.reset();
     showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
-    // advance page
 }
 
 void Gallery::goToNextHighlightBox(){
@@ -119,6 +122,7 @@ void Gallery::drawHighlightBox(uint32_t color){
 }
 
 void Gallery::showThumbnails(){
+  // todo consider calling getThumbnailsOnPage only in this method
   for (size_t i = 0; i < thumbnailsOnPage.size(); i++){
       showThumbnail(i);
   }

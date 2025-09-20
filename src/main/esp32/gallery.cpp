@@ -3,6 +3,7 @@
 #include "../core/configs.h"
 #include <cstring>
 #include "thumbnail_utils.h"
+#define LOG_LEVEL 3
 #include "log.h"
 
 Gallery::~Gallery() {

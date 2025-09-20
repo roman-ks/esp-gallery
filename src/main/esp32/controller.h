@@ -10,23 +10,35 @@
 
 class Controller {
     public:
-        Controller(Gallery &gallery) : gallery(gallery){}
+        Controller(Gallery &gallery) : gallery(gallery), buttonEventHandledTime(){}
         ~Controller();
 
         void init();
         void loop();  
     private:
         Gallery &gallery;
+        inline static std::map<int, bool> buttonPressed;
+        inline static std::map<int, uint32_t> buttonRisingTime;
+        inline static std::map<int, uint32_t> buttonFallingTime;
         inline static std::map<int, std::atomic<int>> buttonStates;
-        inline static std::map<int, uint32_t> lastButtonPresses;
+        std::map<int, uint32_t> buttonEventHandledTime;
         
         void handleRightButtonPress();
-        void handleEnterButtonPress();
-        bool isButtonPressed(int pin);
-        void initButton(int pin, void isrFunc(void));
+        void handleRightButtonLongPress();
 
-        static void IRAM_ATTR rightISR();
-        static void IRAM_ATTR enterISR();
+        void handleEnterButtonPress();
+
+        bool isButtonPressed(int pin);
+        bool isButtonLongPressed(int pin);
+
+        void initButton(int pin, void isrFunc(void));
+        void initNavButton(int pin, void isrFallingFunc(void), void isrRisingFunc(void));
+
+        static void IRAM_ATTR rightFallingISR();
+        static void IRAM_ATTR rightRisingISR();
+        static void IRAM_ATTR rightChangeISR();
+
+        // static void IRAM_ATTR enterISR();
         static void IRAM_ATTR handleISR(int pin);
 };
 

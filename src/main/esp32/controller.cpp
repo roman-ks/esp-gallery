@@ -1,6 +1,9 @@
 #include "controller.h"
 #include "log.h"
 
+#define LONG_PRESS_THRESHOLD 100
+#define LONG_PRESS_INTERVAL 500
+
 
 Controller::~Controller() {
     detachInterrupt(SCROLL_RIGHT_BUTTON);
@@ -8,35 +11,68 @@ Controller::~Controller() {
 }
 
 void Controller::init(){
-    initButton(SCROLL_RIGHT_BUTTON, rightISR);
-    initButton(ENTER_BUTTON, enterISR);
+    // initNavButton(SCROLL_RIGHT_BUTTON, rightFallingISR, rightRisingISR);
+
+    pinMode(SCROLL_RIGHT_BUTTON, INPUT_PULLUP);
+    buttonStates[SCROLL_RIGHT_BUTTON] = 0;
+    buttonFallingTime[SCROLL_RIGHT_BUTTON] = 0;
+    buttonRisingTime[SCROLL_RIGHT_BUTTON] = 0;
+    attachInterrupt(SCROLL_RIGHT_BUTTON, rightChangeISR, CHANGE);
+    // initButton(ENTER_BUTTON, enterISR);
 }
 
-void Controller::initButton(int pin, void isrFunc(void)){
+void Controller::initNavButton(int pin, void isrFallingFunc(void), void isrRisingFunc(void)){
+    initButton(pin, isrFallingFunc);
+    buttonRisingTime[pin] = 0;
+    attachInterrupt(pin, isrRisingFunc, RISING);
+}
+
+void Controller::initButton(int pin, void isrFallingFunc(void)){
     pinMode(pin, INPUT_PULLUP);
     buttonStates[pin] = 0;
-    lastButtonPresses[pin] = 0;
-    attachInterrupt(pin, isrFunc, FALLING);
+    buttonFallingTime[pin] = 0;
+    attachInterrupt(pin, isrFallingFunc, FALLING);
 }
 
-void Controller::rightISR(){
-    handleISR(SCROLL_RIGHT_BUTTON);
+void Controller::rightFallingISR(){
+    buttonFallingTime[SCROLL_RIGHT_BUTTON]=millis();
 }
 
-void Controller::enterISR(){
-    handleISR(ENTER_BUTTON);
+void Controller::rightRisingISR(){
+    buttonRisingTime[SCROLL_RIGHT_BUTTON]=millis();
 }
 
-void Controller::handleISR(int pin){
-    uint32_t time = millis();
-    // wait debounce time
-    if(time - lastButtonPresses[pin] > 200 ){
-        buttonStates[pin]++;
-        lastButtonPresses[pin]=time;
+void Controller::rightChangeISR(){
+    int signal = digitalRead(SCROLL_RIGHT_BUTTON);
+    if(signal == LOW){
+        // LOW means pressed
+        buttonFallingTime[SCROLL_RIGHT_BUTTON] = millis();
+        buttonPressed[SCROLL_RIGHT_BUTTON] = false;
+    }else{
+        buttonRisingTime[SCROLL_RIGHT_BUTTON] = millis();
+        buttonPressed[SCROLL_RIGHT_BUTTON] = true;
     }
 }
 
+
+// void Controller::enterISR(){
+//     handleISR(ENTER_BUTTON);
+// }
+
+void Controller::handleISR(int pin){
+    // uint32_t time = millis();
+    // // wait debounce time
+    // if(time - lastButtonPresses[pin] > 200 ){
+    //     buttonStates[pin]++;
+    //     lastButtonPresses[pin]=time;
+    // }
+}
+
 void Controller::loop(){
+    if(isButtonLongPressed(SCROLL_RIGHT_BUTTON)){
+        LOG("Scroll right button long pressed");
+        handleRightButtonLongPress();
+    }
     if(isButtonPressed(SCROLL_RIGHT_BUTTON)){
         LOG("Scroll right button pressed");
         handleRightButtonPress();
@@ -57,6 +93,18 @@ void Controller::handleRightButtonPress(){
     }
 }
 
+void Controller::handleRightButtonLongPress(){
+    if(!gallery.isImageOpen()){
+        // static uint32_t lastHandledTime=0;
+
+        // uint32_t now = millis();
+        // if(now- buttonEventHandledTime[SCROLL_RIGHT_BUTTON] > LONG_PRESS_INTERVAL){
+            gallery.nextPage();
+            // buttonEventHandledTime[SCROLL_RIGHT_BUTTON] = now;
+        // }
+    }
+}
+
 void Controller::handleEnterButtonPress(){
     if(gallery.isImageOpen()){
         gallery.closeImage();
@@ -66,10 +114,40 @@ void Controller::handleEnterButtonPress(){
 }
 
 bool Controller::isButtonPressed(int pin){
-    bool pressed = buttonStates[pin] > 0;
-    if(pressed){
-        buttonStates[pin]--;
-    } 
-    return pressed;
+    return false;
+    // uint32_t lastFalling = buttonFallingTime[pin];
+    // uint32_t lastRising = buttonRisingTime[pin];
+
+    // LOGF_D("Last raising: %d, falling: %d\n", lastRising, lastFalling);
+    // if(lastRising==0){
+    //     return false;
+    // }
+
+    // if(lastFalling < lastRising){
+    //     return false;
+    // }
+    // return millis()-lastRising > LONG_PRESS_THRESHOLD;
+}
+
+bool Controller::isButtonLongPressed(int pin){
+    uint32_t lastFalling = buttonFallingTime[pin];
+    uint32_t lastRising = buttonRisingTime[pin];
+
+    LOGF_D("Last falling: %d, raising: %d\n", lastFalling, lastRising);
+    if(lastFalling==0){
+        return false;
+    }
+
+    if(lastRising >= lastFalling){
+        return false;
+    }
+    uint32_t now = millis();
+    if(now-lastFalling > LONG_PRESS_THRESHOLD){
+        if(now - buttonEventHandledTime[pin] > LONG_PRESS_INTERVAL){
+            buttonEventHandledTime[pin] = now;
+            return true;
+        }
+    }
+    return false;
 }
 

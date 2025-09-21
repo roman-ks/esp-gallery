@@ -10,7 +10,8 @@
 
 class Controller {
     public:
-        Controller(Gallery &gallery) : gallery(gallery), buttonEventHandledTime(){}
+        Controller(Gallery &gallery) : gallery(gallery), 
+            buttonPressHandledTime(), buttonLongPressHandledTime(){}
         ~Controller();
 
         void init();
@@ -21,7 +22,9 @@ class Controller {
         inline static std::map<int, uint64_t> buttonRisingTime;
         inline static std::map<int, uint64_t> buttonFallingTime;
         inline static std::map<int, std::atomic<int>> buttonStates;
-        std::map<int, uint32_t> buttonEventHandledTime;
+        std::map<int, uint64_t> buttonPressHandledTime;
+        std::map<int, uint64_t> buttonLongPressHandledTime;
+
         
         void handleRightButtonPress();
         void handleRightButtonLongPress();

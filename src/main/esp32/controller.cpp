@@ -2,8 +2,10 @@
 #include "log.h"
 
 // in micros
-#define LONG_PRESS_THRESHOLD 100000
+#define SHORT_PRESS_THRESHOLD 100000
+#define LONG_PRESS_THRESHOLD 400000
 #define LONG_PRESS_INTERVAL 500000
+#define DEBOUNCE_DURATION 10000
 
 
 Controller::~Controller() {
@@ -75,10 +77,10 @@ void Controller::loop(){
     if(isButtonPressed(SCROLL_RIGHT_BUTTON)){
         LOG("Scroll right button pressed");
         handleRightButtonPress();
-    } else if(isButtonPressed(ENTER_BUTTON)){
+    } /*else if(isButtonPressed(ENTER_BUTTON)){
         LOG("Enter button pressed");
         handleEnterButtonPress();
-    } else {
+    } */else {
         // No button pressed, keep drawing current image if any
         gallery.draw();
     }
@@ -113,26 +115,39 @@ void Controller::handleEnterButtonPress(){
 }
 
 bool Controller::isButtonPressed(int pin){
+    uint64_t lastFalling = buttonFallingTime[pin];
+    uint64_t lastRising = buttonRisingTime[pin];
+
+    LOGF_D("Pin: %d, Last falling: %llu, raising: %llu, r-f: %llu\n", 
+            pin, lastFalling, lastRising, lastRising-lastFalling);
+    if(lastRising==0){
+        return false;
+    }
+    if(lastFalling > lastRising){
+        // button hasnt been released yet
+        return false;
+    }
+    uint64_t lastPressDurr = lastRising - lastFalling;
+
+    // LOGF_D("Pin: %d, lastPressDurr: %llu, > SHORT_PRESS_THRESHOLD: %d, < LONG_PRESS_THRESHOLD: %d\n", 
+    //     pin, lastPressDurr, lastPressDurr > SHORT_PRESS_THRESHOLD, lastPressDurr < LONG_PRESS_THRESHOLD);
+    if(lastPressDurr > SHORT_PRESS_THRESHOLD 
+        && lastPressDurr < LONG_PRESS_THRESHOLD){
+            // LOGF_D("Pin: %d, Duration ok\n", pin);
+            if(buttonPressHandledTime[pin]!=lastRising){
+                // LOGF_D("Pin: %d, Registering press\n", pin);
+                buttonPressHandledTime[pin]=lastRising;
+                return true;
+            }
+        }
     return false;
-    // uint32_t lastFalling = buttonFallingTime[pin];
-    // uint32_t lastRising = buttonRisingTime[pin];
-
-    // LOGF_D("Last raising: %d, falling: %d\n", lastRising, lastFalling);
-    // if(lastRising==0){
-    //     return false;
-    // }
-
-    // if(lastFalling < lastRising){
-    //     return false;
-    // }
-    // return millis()-lastRising > LONG_PRESS_THRESHOLD;
 }
 
 bool Controller::isButtonLongPressed(int pin){
     uint64_t lastFalling = buttonFallingTime[pin];
     uint64_t lastRising = buttonRisingTime[pin];
 
-    LOGF_D("Last falling: %llu, raising: %llu\n", lastFalling, lastRising);
+    // LOGF_D("Last falling: %llu, raising: %llu\n", lastFalling, lastRising);
     if(lastFalling==0){
         return false;
     }
@@ -142,8 +157,8 @@ bool Controller::isButtonLongPressed(int pin){
     }
     uint64_t now = nowMicros();
     if(now-lastFalling > LONG_PRESS_THRESHOLD){
-        if(now - buttonEventHandledTime[pin] > LONG_PRESS_INTERVAL){
-            buttonEventHandledTime[pin] = now;
+        if(now - buttonLongPressHandledTime[pin] > LONG_PRESS_INTERVAL){
+            buttonLongPressHandledTime[pin] = now;
             return true;
         }
     }

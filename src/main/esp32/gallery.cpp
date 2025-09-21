@@ -114,6 +114,7 @@ void Gallery::nextPage(){
     LOGF_D("Thumbnails on page %d: %d\n", pageNum, thumbnailsOnPage.size());
     renderer.reset();
     showThumbnails();
+    drawHighlightBox(HIGHLIGHT_COLOR);
 }
 
 void Gallery::drawHighlightBox(uint32_t color){

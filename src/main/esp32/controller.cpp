@@ -3,8 +3,8 @@
 
 // in micros
 #define SHORT_PRESS_THRESHOLD 100000
-#define LONG_PRESS_THRESHOLD 400000
-#define LONG_PRESS_INTERVAL 500000
+#define LONG_PRESS_THRESHOLD 1000000
+#define LONG_PRESS_INTERVAL 1000000
 #define DEBOUNCE_DURATION 10000
 
 
@@ -16,11 +16,17 @@ Controller::~Controller() {
 void Controller::init(){
     // initNavButton(SCROLL_RIGHT_BUTTON, rightFallingISR, rightRisingISR);
 
-    pinMode(SCROLL_RIGHT_BUTTON, INPUT_PULLUP);
-    buttonStates[SCROLL_RIGHT_BUTTON] = 0;
-    buttonFallingTime[SCROLL_RIGHT_BUTTON] = 0;
-    buttonRisingTime[SCROLL_RIGHT_BUTTON] = 0;
-    attachInterrupt(SCROLL_RIGHT_BUTTON, rightChangeISR, CHANGE);
+    int pin = SCROLL_RIGHT_BUTTON;
+    pinMode(pin, INPUT_PULLUP);
+    buttonStates[pin] = 0;
+    buttonFallingTime[pin] = 0;
+    buttonRisingTime[pin] = 0;
+    presses[pin] = std::vector<std::pair<uint64_t, uint64_t>>(PRESSES_HISTORY);
+    for(int i = 0; i< PRESSES_HISTORY; ++i){
+        presses[pin][i] = std::pair(0,0);
+    }
+    pressIndexes[pin] = 0;
+    attachInterrupt(pin, rightChangeISR, CHANGE);
     // initButton(ENTER_BUTTON, enterISR);
 }
 
@@ -46,12 +52,17 @@ void Controller::rightRisingISR(){
 }
 
 void Controller::rightChangeISR(){
-    int signal = digitalRead(SCROLL_RIGHT_BUTTON);
+    int pin = SCROLL_RIGHT_BUTTON;
+    int signal = digitalRead(pin);
+    int index = pressIndexes[pin];
     if(signal == LOW){
         // LOW means pressed
-        buttonFallingTime[SCROLL_RIGHT_BUTTON] = nowMicros();
+        presses[pin][index].first = nowMicros();
+        buttonFallingTime[pin] = nowMicros();
     } else {
-        buttonRisingTime[SCROLL_RIGHT_BUTTON] = nowMicros();
+        presses[pin][index].second = nowMicros();
+        pressIndexes[pin]=(index+1) % PRESSES_HISTORY;
+        buttonRisingTime[pin] = nowMicros();
     }
 }
 
@@ -115,33 +126,93 @@ void Controller::handleEnterButtonPress(){
 }
 
 bool Controller::isButtonPressed(int pin){
-    uint64_t lastFalling = buttonFallingTime[pin];
-    uint64_t lastRising = buttonRisingTime[pin];
+    auto& history = presses[pin];
+    size_t pressIndex = wrap(pressIndexes[pin]-1, PRESSES_HISTORY);
 
-    LOGF_D("Pin: %d, Last falling: %llu, raising: %llu, r-f: %llu\n", 
-            pin, lastFalling, lastRising, lastRising-lastFalling);
-    if(lastRising==0){
-        return false;
-    }
-    if(lastFalling > lastRising){
-        // button hasnt been released yet
-        return false;
-    }
-    uint64_t lastPressDurr = lastRising - lastFalling;
+    uint64_t now = nowMicros();
 
-    // LOGF_D("Pin: %d, lastPressDurr: %llu, > SHORT_PRESS_THRESHOLD: %d, < LONG_PRESS_THRESHOLD: %d\n", 
-    //     pin, lastPressDurr, lastPressDurr > SHORT_PRESS_THRESHOLD, lastPressDurr < LONG_PRESS_THRESHOLD);
-    if(lastPressDurr > SHORT_PRESS_THRESHOLD 
-        && lastPressDurr < LONG_PRESS_THRESHOLD){
-            // LOGF_D("Pin: %d, Duration ok\n", pin);
-            if(buttonPressHandledTime[pin]!=lastRising){
-                // LOGF_D("Pin: %d, Registering press\n", pin);
-                buttonPressHandledTime[pin]=lastRising;
+    // Walk backwards through press history
+    for(int i = 0; i < PRESSES_HISTORY; ++i){
+        auto pressPair = history[wrap(pressIndex-i, PRESSES_HISTORY)];
+        if(pressPair.first == 0 || pressPair.second == 0) {
+            // Empty entry
+            continue;
+        }
+
+        uint64_t dur = pressPair.second - pressPair.first;
+        if(dur > SHORT_PRESS_THRESHOLD && dur < LONG_PRESS_THRESHOLD){
+            // Only trigger once per rising edge
+            if(pressPair.second > buttonPressHandledTime[pin]){
+                buttonPressHandledTime[pin] = pressPair.second; // mark handled
                 return true;
             }
         }
+    }
+
     return false;
 }
+
+// bool Controller::isButtonPressed(int pin){
+//     auto history = presses[pin];
+//     size_t pressIndex = wrap(pressIndexes[pin]-1, PRESSES_HISTORY);
+//     if(history[pressIndex].first==0||history[pressIndex].second==0){
+//         pressIndex = wrap(pressIndex-1, PRESSES_HISTORY);
+//     }
+//     if(history[pressIndex].first==0||history[pressIndex].second==0){
+//         // previous also 0, no presses yet
+//         return false;
+//     }
+
+//     LOGF_D("Pin: %d, i: %d, history: ", pin, pressIndex);
+//     for(int i = 0;i<PRESSES_HISTORY;++i){
+//         size_t ind = i;
+//         auto pressPair = history[ind];
+//         Serial.printf("%d: %llu-%llu ", ind, pressPair.first, pressPair.second);
+//     }
+//     Serial.println();
+//     uint64_t now = nowMicros();
+
+//     // find max press duration over DEBOUNCE_DURATION
+//     uint64_t maxDur = 0;
+//     uint64_t maxRising = 0;
+//     for(int i = 0;i<PRESSES_HISTORY;++i){
+//         auto pressPair = history[wrap(pressIndex-i, PRESSES_HISTORY)];
+//         if(pressPair.second < buttonPressHandledTime[pin]){
+//             // LOGF_D("Pin: %d, Last raise(%llu) was too long ago: %llu\n", 
+//             //     pin, pressPair.second, now-pressPair.second);
+//             // return false;
+//             // reached already handled pair
+//             break;
+//         }
+//         uint64_t dur = pressPair.second - pressPair.first;
+//         LOGF_D("Pin: %d, dur: %llu, > SHORT_PRESS_THRESHOLD: %d, < LONG_PRESS_THRESHOLD: %d\n", 
+//             pin, dur, dur > SHORT_PRESS_THRESHOLD, dur < LONG_PRESS_THRESHOLD);
+//         if(dur > SHORT_PRESS_THRESHOLD && dur < LONG_PRESS_THRESHOLD){
+//             // if(buttonPressHandledTime[pin]!=maxRising){
+//                 // LOGF_D("Pin: %d, Registering press\n", pin);
+//                 // buttonPressHandledTime[pin]=maxRising;
+//                 return true;
+//             // }
+//         }
+//         // if(dur>maxDur){
+//         //     maxDur = dur;
+//         //     maxRising = pressPair.second;
+//         // }
+//     }
+
+//     // LOGF_D("Pin: %d, maxDur: %llu, > SHORT_PRESS_THRESHOLD: %d, < LONG_PRESS_THRESHOLD: %d\n", 
+//     //     pin, maxDur, maxDur > SHORT_PRESS_THRESHOLD, maxDur < LONG_PRESS_THRESHOLD);
+//     // if(maxDur > SHORT_PRESS_THRESHOLD 
+//     //     && maxDur < LONG_PRESS_THRESHOLD){
+//     //         // LOGF_D("Pin: %d, Duration ok\n", pin);
+//     //     if(buttonPressHandledTime[pin]!=maxRising){
+//     //             // LOGF_D("Pin: %d, Registering press\n", pin);
+//     //         buttonPressHandledTime[pin]=maxRising;
+//     //         return true;
+//     //     }
+//     // }
+//     return false;
+// }
 
 bool Controller::isButtonLongPressed(int pin){
     uint64_t lastFalling = buttonFallingTime[pin];

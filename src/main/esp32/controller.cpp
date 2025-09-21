@@ -1,5 +1,5 @@
 #include "controller.h"
-#define LOG_LEVEL 0
+#define LOG_LEVEL 2
 #include "log.h"
 
 // in micros
@@ -17,7 +17,8 @@ Controller::~Controller() {
 void Controller::init(){
     int pin = SCROLL_RIGHT_BUTTON;
     pinMode(pin, INPUT_PULLUP);
-    presses[pin-BUTTON_INDEX_OFFSET] = std::pair<uint64_t, uint64_t>(0,0);
+    presses[pin-BUTTON_INDEX_OFFSET][0]=0;
+    presses[pin-BUTTON_INDEX_OFFSET][1]=0;
     buttonPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
     buttonLongPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
     buttonTimer = timerBegin(1000000);
@@ -35,10 +36,10 @@ void Controller::onButtonTimer() {
     uint64_t now = nowMicros(); // high-resolution timestamp
     if (pressed) {
         portENTER_CRITICAL_ISR(&timerMux);
-        if (presses[pinIndex].first == 0) {
-            presses[pinIndex].first = now;  // first time pressed
+        if (presses[pinIndex][0] == 0) {
+            presses[pinIndex][0] = now;  // first time pressed
         }
-        presses[pinIndex].second = now;        // update last seen press
+        presses[pinIndex][1] = now;        // update last seen press
         portEXIT_CRITICAL_ISR(&timerMux);
     }
    
@@ -78,19 +79,19 @@ void Controller::resetPress(int pin) {
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     uint64_t now = nowMicros();
     portENTER_CRITICAL(&timerMux);
-    uint64_t end   = presses[pinIndex].second;
+    uint64_t end   = presses[pinIndex][1];
+    portEXIT_CRITICAL(&timerMux);
     if(end == 0){
-        portEXIT_CRITICAL(&timerMux);
         return;
     }
     bool reset = false;
     if(now - end > PRESS_TTL){
-        presses[pinIndex].first = 0;
-        presses[pinIndex].second = 0;
+        portENTER_CRITICAL(&timerMux);
+        presses[pinIndex][0] = 0;
+        presses[pinIndex][1] = 0;
+        portEXIT_CRITICAL(&timerMux);
         reset = true;
     }
-    portEXIT_CRITICAL(&timerMux);
-    // magic log below, stuff slows down if removed
     LOGF_D("Pin: %d, reset: %d\n", pin, reset);
 }
 
@@ -119,8 +120,8 @@ void Controller::handleEnterButtonPress(){
 bool Controller::isButtonPressed(int pin){
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     portENTER_CRITICAL(&timerMux);
-    uint64_t start = presses[pinIndex].first;
-    uint64_t end   = presses[pinIndex].second;
+    uint64_t start = presses[pinIndex][0];
+    uint64_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     
     // LOGF_D("Pin: %d, start: %llu, end: %llu, handled: %llu\n", 
@@ -139,8 +140,8 @@ bool Controller::isButtonPressed(int pin){
 bool Controller::isButtonLongPressed(int pin){
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     portENTER_CRITICAL(&timerMux);
-    uint64_t start = presses[pinIndex].first;
-    uint64_t end   = presses[pinIndex].second;
+    uint64_t start = presses[pinIndex][0];
+    uint64_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     
     if (start != 0) {

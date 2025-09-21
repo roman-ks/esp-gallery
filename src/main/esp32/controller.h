@@ -19,7 +19,7 @@ class Controller {
     private:
         Gallery &gallery;
         // pairs (press-release)
-        inline static std::pair<uint64_t, uint64_t> presses[BUTTON_COUNT];
+        inline static volatile uint64_t presses[BUTTON_COUNT][2];
         volatile uint64_t buttonPressHandledTime[BUTTON_COUNT];
         volatile uint64_t buttonLongPressHandledTime[BUTTON_COUNT];
         inline static hw_timer_t *buttonTimer = nullptr;

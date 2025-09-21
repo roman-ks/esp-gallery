@@ -33,7 +33,7 @@ void Controller::onButtonTimer() {
     int pin = SCROLL_RIGHT_BUTTON;
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     bool pressed = digitalRead(pin) == LOW;
-    uint64_t now = nowMicros(); // high-resolution timestamp
+    uint32_t now = micros(); // high-resolution timestamp
     if (pressed) {
         portENTER_CRITICAL_ISR(&timerMux);
         if (presses[pinIndex][0] == 0) {
@@ -41,6 +41,7 @@ void Controller::onButtonTimer() {
         }
         presses[pinIndex][1] = now;        // update last seen press
         portEXIT_CRITICAL_ISR(&timerMux);
+        timerCount++;
     }
    
 }
@@ -56,9 +57,6 @@ void Controller::initButton(int pin, void isrFallingFunc(void)){
 
 
 void Controller::loop(){
-    // LOGF_D("Timer count: %d\n", timerCount);
-    resetPress(SCROLL_RIGHT_BUTTON);
-
     if(isButtonLongPressed(SCROLL_RIGHT_BUTTON)){
         LOG("Scroll right button long pressed");
         handleRightButtonLongPress();
@@ -73,13 +71,16 @@ void Controller::loop(){
         // No button pressed, keep drawing current image if any
         gallery.draw();
     }
+    LOGF_D("Timer count: %d\n", timerCount);
+    resetPress(SCROLL_RIGHT_BUTTON);
+
 }
 
 void Controller::resetPress(int pin) {
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
-    uint64_t now = nowMicros();
+    uint32_t now = micros();
     portENTER_CRITICAL(&timerMux);
-    uint64_t end   = presses[pinIndex][1];
+    uint32_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     if(end == 0){
         return;
@@ -120,14 +121,14 @@ void Controller::handleEnterButtonPress(){
 bool Controller::isButtonPressed(int pin){
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     portENTER_CRITICAL(&timerMux);
-    uint64_t start = presses[pinIndex][0];
-    uint64_t end   = presses[pinIndex][1];
+    uint32_t start = presses[pinIndex][0];
+    uint32_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     
-    // LOGF_D("Pin: %d, start: %llu, end: %llu, handled: %llu\n", 
-        // pin, start, end, buttonPressHandledTime[pinIndex]);
+    LOGF_D("Pin: %d, start: %lu, end: %lu, handled: %lu\n", 
+        pin, start, end, buttonPressHandledTime[pinIndex]);
     if (start != 0) {
-        if(nowMicros() - end > PRESS_TTL && end - start > SHORT_PRESS_THRESHOLD){
+        if(micros() - end > PRESS_TTL && end - start > SHORT_PRESS_THRESHOLD){
             if(start > buttonPressHandledTime[pinIndex]){
                 buttonPressHandledTime[pinIndex] = start;
                 return true;
@@ -140,13 +141,13 @@ bool Controller::isButtonPressed(int pin){
 bool Controller::isButtonLongPressed(int pin){
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     portENTER_CRITICAL(&timerMux);
-    uint64_t start = presses[pinIndex][0];
-    uint64_t end   = presses[pinIndex][1];
+    uint32_t start = presses[pinIndex][0];
+    uint32_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     
     if (start != 0) {
         if(end - start > LONG_PRESS_THRESHOLD){
-            uint64_t now = nowMicros();
+            uint32_t now = micros();
             if(now - buttonLongPressHandledTime[pinIndex] > LONG_PRESS_INTERVAL){
                 buttonLongPressHandledTime[pinIndex] = now;
                 return true;
@@ -156,12 +157,3 @@ bool Controller::isButtonLongPressed(int pin){
     return false;
 }
 
-
-uint64_t Controller::nowMicros(){
-    // drop last digit
-    uint64_t ms = millis()/10;
-    // get last 4 digits, containing up to 9 full millis and up to 999 micros
-    uint32_t mcrs =  micros() % 10000;
-
-    return ms * 10000 + mcrs;
-}

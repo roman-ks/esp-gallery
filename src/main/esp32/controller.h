@@ -35,8 +35,7 @@ class Controller {
         bool isButtonPressed(int pin);
         bool isButtonLongPressed(int pin);
 
-        void initButton(int pin, void isrFunc(void));
-        void initNavButton(int pin, void isrFallingFunc(void), void isrRisingFunc(void));
+        void initButton(int pin);
         void resetPress(int pin);
 
         static void IRAM_ATTR onButtonTimer();

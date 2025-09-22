@@ -1,5 +1,5 @@
 #include "controller.h"
-#define LOG_LEVEL 2
+#define LOG_LEVEL 1
 #include "log.h"
 
 // in micros
@@ -10,20 +10,16 @@
 
 
 Controller::~Controller() {
-    detachInterrupt(SCROLL_RIGHT_BUTTON);
-    detachInterrupt(ENTER_BUTTON);
+    if(buttonTimer!=nullptr)
+        timerEnd(buttonTimer);
 }
 
 void Controller::init(){
-    int pin = SCROLL_RIGHT_BUTTON;
-    pinMode(pin, INPUT_PULLUP);
-    presses[pin-BUTTON_INDEX_OFFSET][0]=0;
-    presses[pin-BUTTON_INDEX_OFFSET][1]=0;
-    buttonPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
-    buttonLongPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
+    initButton(SCROLL_RIGHT_BUTTON);
+    initButton(ENTER_BUTTON);
+
     buttonTimer = timerBegin(1000000);
     timerAttachInterrupt(buttonTimer, &onButtonTimer); 
-    // Set alarm to call onTimer function every 5 seconds (value in microseconds).
     timerAlarm(buttonTimer, 2000, true, 0);
 
 }
@@ -43,16 +39,28 @@ void Controller::onButtonTimer() {
         portEXIT_CRITICAL_ISR(&timerMux);
         timerCount++;
     }
+
+    pin = ENTER_BUTTON;
+    pinIndex = pin-BUTTON_INDEX_OFFSET;
+    pressed = digitalRead(pin) == LOW;
+    now = micros(); // high-resolution timestamp
+    if (pressed) {
+        portENTER_CRITICAL_ISR(&timerMux);
+        if (presses[pinIndex][0] == 0) {
+            presses[pinIndex][0] = now;  // first time pressed
+        }
+        presses[pinIndex][1] = now;        // update last seen press
+        portEXIT_CRITICAL_ISR(&timerMux);
+    }
    
 }
 
-void Controller::initNavButton(int pin, void isrFallingFunc(void), void isrRisingFunc(void)){
-    // initButton(pin, isrFallingFunc);
-    // buttonRisingTime[pin] = 0;
-    // attachInterrupt(pin, isrRisingFunc, RISING);
-}
-
-void Controller::initButton(int pin, void isrFallingFunc(void)){
+void Controller::initButton(int pin){
+    pinMode(pin, INPUT_PULLUP);
+    presses[pin-BUTTON_INDEX_OFFSET][0]=0;
+    presses[pin-BUTTON_INDEX_OFFSET][1]=0;
+    buttonPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
+    buttonLongPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
 }
 
 
@@ -64,15 +72,16 @@ void Controller::loop(){
     if(isButtonPressed(SCROLL_RIGHT_BUTTON)){
         LOG("Scroll right button pressed");
         handleRightButtonPress();
-    } /*else if(isButtonPressed(ENTER_BUTTON)){
+    } else if(isButtonPressed(ENTER_BUTTON)){
         LOG("Enter button pressed");
         handleEnterButtonPress();
-    } */else {
+    } else {
         // No button pressed, keep drawing current image if any
         gallery.draw();
     }
     LOGF_D("Timer count: %d\n", timerCount);
     resetPress(SCROLL_RIGHT_BUTTON);
+    resetPress(ENTER_BUTTON);
 
 }
 

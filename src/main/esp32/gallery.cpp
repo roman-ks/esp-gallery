@@ -3,6 +3,7 @@
 #include "../core/configs.h"
 #include <cstring>
 #include "thumbnail_utils.h"
+#define LOG_LEVEL 3
 #include "log.h"
 
 Gallery::~Gallery() {
@@ -113,6 +114,7 @@ void Gallery::nextPage(){
     LOGF_D("Thumbnails on page %d: %d\n", pageNum, thumbnailsOnPage.size());
     renderer.reset();
     showThumbnails();
+    drawHighlightBox(HIGHLIGHT_COLOR);
 }
 
 void Gallery::drawHighlightBox(uint32_t color){

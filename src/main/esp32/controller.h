@@ -1,12 +1,9 @@
 #ifndef __ESP_GALLERY_CONTROLLER_H__
 #define __ESP_GALLERY_CONTROLLER_H__
 
-#include <map>
 #include "gallery.h"
-#include <atomic>
 
-#define SCROLL_RIGHT_BUTTON 5
-#define ENTER_BUTTON 4
+#define BUTTON_COUNT 2
 
 class Controller {
     public:
@@ -17,17 +14,27 @@ class Controller {
         void loop();  
     private:
         Gallery &gallery;
-        inline static std::map<int, std::atomic<int>> buttonStates;
-        inline static std::map<int, uint32_t> lastButtonPresses;
+        // pairs (press-release)
+        inline static volatile uint32_t presses[BUTTON_COUNT][2];
+        volatile uint32_t buttonPressHandledTime[BUTTON_COUNT];
+        volatile uint32_t buttonLongPressHandledTime[BUTTON_COUNT];
+        inline static hw_timer_t *buttonTimer = nullptr;
+        inline static portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+        inline static volatile uint16_t timerCount = 0;
+
         
         void handleRightButtonPress();
-        void handleEnterButtonPress();
-        bool isButtonPressed(int pin);
-        void initButton(int pin, void isrFunc(void));
+        void handleRightButtonLongPress();
 
-        static void IRAM_ATTR rightISR();
-        static void IRAM_ATTR enterISR();
-        static void IRAM_ATTR handleISR(int pin);
+        void handleEnterButtonPress();
+
+        bool isButtonPressed(int pin);
+        bool isButtonLongPressed(int pin);
+
+        void initButton(int pin);
+        void resetPress(int pin);
+
+        static void IRAM_ATTR onButtonTimer();
 };
 
 #endif

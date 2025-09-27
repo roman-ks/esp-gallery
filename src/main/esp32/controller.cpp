@@ -1,7 +1,11 @@
 #include "controller.h"
-#define LOG_LEVEL 1
+#define LOG_LEVEL 2
 #include "log.h"
 
+
+#define SCROLL_RIGHT_BUTTON 5
+#define ENTER_BUTTON 4
+#define BUTTON_INDEX_OFFSET 4
 // in micros
 #define SHORT_PRESS_THRESHOLD 100000
 #define LONG_PRESS_THRESHOLD 500000

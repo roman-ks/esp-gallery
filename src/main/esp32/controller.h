@@ -3,11 +3,7 @@
 
 #include "gallery.h"
 
-#define SCROLL_RIGHT_BUTTON 5
-#define ENTER_BUTTON 4
-#define BUTTON_INDEX_OFFSET 4
 #define BUTTON_COUNT 2
-// #define PRESSES_HISTORY 20
 
 class Controller {
     public:

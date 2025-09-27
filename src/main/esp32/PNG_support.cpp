@@ -1,4 +1,5 @@
 #include "PNG_support.h"
+#include "log.h"
 
 // Here are the callback functions that the decPNG library
 // will use to open files, fetch data and close the file.
@@ -6,7 +7,7 @@
 File pngfile;
 
 void * pngOpen(const char *filename, int32_t *size) {
-  Serial.printf("Attempting to open %s\n", filename);
+  LOGF("Attempting to open %s\n", filename);
   pngfile = LittleFS.open(filename, "r");
   *size = pngfile.size();
   return &pngfile;

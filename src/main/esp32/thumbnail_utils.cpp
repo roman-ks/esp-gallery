@@ -1,5 +1,6 @@
 #include "thumbnail_utils.h"
 #include <PNGdec.h>
+#include "log.h"
 
 PNG thumbnailPng;
 
@@ -14,25 +15,25 @@ uint16_t *imageBytes;
 int lineNum=0;
 IMG_HOLDER readPngIntoArray(char* filepath){
   IMG_HOLDER imgHolder;
-  Serial.println("Opening image..");
+  LOG("Opening image..");
   imageBytes = (uint16_t*) ps_malloc(MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*sizeof(uint16_t));
-  Serial.printf("Allocated at 0x%x\n", imageBytes);
+  LOGF("Allocated at 0x%x\n", imageBytes);
   int16_t rc = thumbnailPng.open(filepath, pngOpen, pngClose, pngRead, pngSeek, pngDrawIntoArray);
   if (rc == PNG_SUCCESS) {
-    Serial.printf("Opened %s\n", filepath);
+    LOGF("Opened %s\n", filepath);
     if (thumbnailPng.getWidth() > MAX_IMAGE_WIDTH) {
-      Serial.println("Image too wide for allocated line buffer size!");
+      LOG("Image too wide for allocated line buffer size!");
     } else {
       rc = thumbnailPng.decode(NULL, 0);
       imgHolder.width=thumbnailPng.getWidth();
       imgHolder.height=thumbnailPng.getHeight();
-      Serial.printf("Decoded %s\n", filepath);
+      LOGF("Decoded %s\n", filepath);
       imgHolder.imageBytes = imageBytes;
-      // Serial.printf("Copied imageBytes\n");
+      // LOGF("Copied imageBytes\n");
       thumbnailPng.close();
     }
   }else{
-    Serial.printf("Error opening image: %d", rc);
+    LOGF("Error opening image: %d", rc);
   }
   return imgHolder;
 }
@@ -56,3 +57,18 @@ int pngDrawIntoArray(PNGDRAW *pDraw) {
   return 1;
 }
 
+// void writeFile(fs::FS &fs, const char *path, const uint8_t *buf, size_t size) {
+//   LOGF("Writing file: %s\r\n", path);
+
+//   File file = fs.open(path, FILE_WRITE);
+//   if (!file) {
+//     LOG("- failed to open file for writing");
+//     return;
+//   }
+//   if (file.write(buf, size)) {
+//     LOG("- file written");
+//   } else {
+//     LOG("- write failed");
+//   }
+//   file.close();
+// }

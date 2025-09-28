@@ -1,13 +1,13 @@
 #include "renderer_cache.h"
-#define LOG_LEVEL 3
+#define LOG_LEVEL 1
 #include "../log.h"
 #include <cstdLib>
 #include "../../core/configs.h"
+#include "SD.h"
 
 
 RendererCache::RendererCache(fs::FS fileSys):fileSys(fileSys), cache(), written(){
     createDir(std::string("/c"));
-    LOGF_D("Log level %d", LOG_LEVEL);
 }
 
 void RendererCache::createDir(const std::string &filepath){
@@ -20,6 +20,8 @@ void RendererCache::createDir(const std::string &filepath){
 }
 
 bool RendererCache::exists(const std::string &key){
+    // todo remove
+    return false;
     if(cache.find(key)!=cache.end())
         return true;
 
@@ -76,6 +78,7 @@ void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHold
     LOGF_D("Writing 0x%x 0x%x\n", mdBuf[0], mdBuf[1]);
     size_t res = file.write(mdBuf, sizeof(mdBuf));
     if(res != 2){
+        LOGF_D("Invalid write size %d, expected: %d\n", res, 2);
         handleInvalidWrite(file, binFilename);
         return;
     }
@@ -84,12 +87,14 @@ void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHold
     LOGF_D("Writing 0x%x 0x%x\n", mdBuf[0], mdBuf[1]);
     res = file.write(mdBuf, sizeof(mdBuf));
     if(res != 2){
+        LOGF_D("Invalid write size %d, expected: %d\n", res, 2);
         handleInvalidWrite(file, binFilename);
         return;
     }
     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(pixelsHolder.pixels.data());
     res = file.write(bytes, pixelsHolder.pixels.size()*sizeof(uint16_t));
     if(res != pixelsHolder.pixels.size()*sizeof(uint16_t)){
+        LOGF_D("Invalid write size %d, expected: %d\n", res, pixelsHolder.pixels.size()*sizeof(uint16_t));
         handleInvalidWrite(file, binFilename);
         return;
     }

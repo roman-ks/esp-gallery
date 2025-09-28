@@ -4,6 +4,7 @@
 #include "capturing_draw_target.h"
 #include "pixels_holder.h"
 #include "../../core/configs.h"
+#define LOG_LEVEL 2
 #include "../log.h"
 #include <memory>
 
@@ -28,30 +29,33 @@ void TFTRenderer::render(const GIFImage &gifImage) {
     if (gifImage.cachable) {
         renderCachable(offsettingDrawTarget, gifImage);
     } else {
-        // LOGF("Not cachable %s: %d\n",gifImage.filePath, id);
+        LOGF_D("Not cachable %s: %d\n",gifImage.filePath, id);
         if (lastRenderedId != id) {
             gifImage.getDecoder().decode(gifImage.filePath, offsettingDrawTarget);
             lastRenderedId = id;
         } else {
             gifImage.getDecoder().advance(offsettingDrawTarget);
         }
+        tft.endWrite(); // The TFT chip select is locked low
     }
-    tft.endWrite(); // The TFT chip select is locked low
 }
 
 void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
     uint16_t id = image.id;
     if (cache.exists(image.filePath)) {
         PixelsHolder &cached = cache.get(image.filePath);
-        // LOGF("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cache[id]->width, cache[id]->height, cache[id]->pixels.size());
+        LOGF_D("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cached.width, cached.height, cached.pixels.size());
         delegate.setAddrWindow(0,0, cached.width, cached.height);
         auto pixels = cached.pixels;
         delegate.pushPixels(pixels.data(), pixels.size());
     } else {
         CapturingDrawTarget capturingDrawTarget(&delegate);
         image.getDecoder().decode(image.filePath, capturingDrawTarget);
+        tft.endWrite(); // The TFT chip select is locked low
+
         cache.put(image.filePath, std::move(capturingDrawTarget.getCaptured()));
-        // LOGF("Caching %s: %d (w:%d, h%d)\n",image.filePath, id, cache[id]->width, cache[id]->height);
+        PixelsHolder &cached = cache.get(image.filePath);
+        LOGF_D("Cached %s: %d (w:%d, h%d)\n",image.filePath, id, cached.width, cached.height);
     }
 }
 
@@ -88,13 +92,13 @@ void TFTRenderer::renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 // iDrawTarget
 
 void TFTRenderer::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
-    // LOGF("Window addr (%d,%d), (%d,%d)\n", x,y,w,h);
+    LOGF_D("Window addr (%d,%d), (%d,%d)\n", x,y,w,h);
 
     tft.setAddrWindow(x,y, w, h);
 }
 
 void TFTRenderer::pushPixels(const void *pixels, uint32_t count){
-    // LOGF("Pushing pixels %d\n", count);
+    LOGF_D("Pushing pixels %d\n", count);
 
     tft.pushPixels(pixels, count);
 }    

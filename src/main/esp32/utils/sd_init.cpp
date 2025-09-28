@@ -26,18 +26,15 @@ bool SdIniter::init(){
         }
     }while(!mounted);
 
-    
     return mounted;
 }
 
 void SdIniter::pulseClock(int count){
-    // spi.beginTransaction(SPISettings(240000, MSBFIRST, SPI_MODE0));
     digitalWrite(cs, HIGH);
     for(int i=0;i<count;i++){
         digitalWrite(sck, HIGH);
         digitalWrite(sck, LOW);
     }
-    // spi.endTransaction();
 }
 
 void SdIniter::printSdInfo(){
@@ -48,7 +45,6 @@ void SdIniter::printSdInfo(){
     return;
   }
 
-  LOG_I("SD Card Type: ");
   if (cardType == CARD_MMC) {
     LOG_I("SD Card Type: MMC");
   } else if (cardType == CARD_SD) {

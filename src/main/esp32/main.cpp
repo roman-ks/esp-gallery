@@ -49,7 +49,6 @@ void setup() {
   gallery = std::make_unique<Gallery>(*renderer, *rendererCache, fileSys);
   controller = std::make_unique<Controller>(*gallery);
 
-  tft.begin();
   renderer->init();
   controller->init();
   gallery->init();

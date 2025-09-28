@@ -23,13 +23,13 @@ void TFTRenderer::reset() {
 void TFTRenderer::render(const GIFImage &gifImage) {
     static uint16_t lastRenderedId = 0;
     OffsettingDrawTarget offsettingDrawTarget(this, gifImage.xPos, gifImage.yPos);
-    tft.startWrite(); // The TFT chip select is locked low
 
     uint16_t id = gifImage.id;
     if (gifImage.cachable) {
         renderCachable(offsettingDrawTarget, gifImage);
     } else {
         LOGF_D("Not cachable %s: %d\n",gifImage.filePath, id);
+        tft.startWrite(); // The TFT chip select is locked low
         if (lastRenderedId != id) {
             gifImage.getDecoder().decode(gifImage.filePath, offsettingDrawTarget);
             lastRenderedId = id;
@@ -45,11 +45,15 @@ void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
     if (cache.exists(image.filePath)) {
         PixelsHolder &cached = cache.get(image.filePath);
         LOGF_D("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cached.width, cached.height, cached.pixels.size());
+        
+        tft.startWrite(); // The TFT chip select is locked low
         delegate.setAddrWindow(0,0, cached.width, cached.height);
         auto pixels = cached.pixels;
         delegate.pushPixels(pixels.data(), pixels.size());
+        tft.endWrite(); // The TFT chip select is locked low
     } else {
         CapturingDrawTarget capturingDrawTarget(&delegate);
+         tft.startWrite(); // The TFT chip select is locked low
         image.getDecoder().decode(image.filePath, capturingDrawTarget);
         tft.endWrite(); // The TFT chip select is locked low
 
@@ -64,14 +68,14 @@ void TFTRenderer::render(const PNGImage &pngImage) {
     if(lastRenderedId == pngImage.id)
         return;
     OffsettingDrawTarget offsettingDrawTarget(this, pngImage.xPos, pngImage.yPos);
-    tft.startWrite(); // The TFT chip select is locked low
 
     if (pngImage.cachable) {
         renderCachable(offsettingDrawTarget, pngImage);
     } else {
+        tft.startWrite(); // The TFT chip select is locked low
         pngImage.getDecoder().decode(pngImage.filePath, offsettingDrawTarget);
+        tft.endWrite(); // The TFT chip select is locked low
     }
-    tft.endWrite(); // The TFT chip select is locked low
 
     lastRenderedId = pngImage.id;
 }

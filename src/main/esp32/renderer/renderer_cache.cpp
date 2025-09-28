@@ -20,8 +20,6 @@ void RendererCache::createDir(const std::string &filepath){
 }
 
 bool RendererCache::exists(const std::string &key){
-    // todo remove
-    return false;
     if(cache.find(key)!=cache.end())
         return true;
 
@@ -120,7 +118,7 @@ std::unique_ptr<PixelsHolder> RendererCache::load(const std::string &key){
     std::string binFilename = std::string("/c")+key+".b";
 
     if(!fileSys.exists(binFilename.c_str())){
-        LOGF_I("One of the cache files for %s is missing\n", key.c_str());
+        LOGF_I("Cache file %s is missing\n", binFilename.c_str());
         return nullptr;        
     }
 

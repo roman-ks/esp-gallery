@@ -1,26 +1,14 @@
 #include "png_decoder.h"
 #include "../../core/configs.h"
-#include <LittleFS.h>
 #define LOG_LEVEL 2
 #include "../log.h"
 
-void PNGDecoder::init() {
-    // Initialize PNG decoder if needed
-}
-
-void PNGDecoder::decode(const std::string &filepath, IDrawTarget &iDrawTarget) {
-    decode(filepath, iDrawTarget, &PNGDecoder::pngOpen, &PNGDecoder::pngClose,
-        &PNGDecoder::pngRead, &PNGDecoder::pngSeek, &PNGDecoder::pngDraw);
-}
-
-void PNGDecoder::decode(const std::string &filepath, IDrawTarget &iDrawTarget,
-                        PNG_OPEN_CALLBACK *openCB, PNG_CLOSE_CALLBACK *closeCB,
-                        PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB) {
+void PNGDecoder::decode(uint8_t *fileBytes, size_t bytesCount, IDrawTarget &iDrawTarget) {
     PNG &png = PNGDecoder::getPng();
     png.close();
     setIDrawTarget(wrapWithDelegates(&iDrawTarget));
     LOG_D("Opening image..");
-    int16_t rc = png.open(filepath.c_str(), openCB, closeCB, readCB, seekCB, drawCB);
+    int16_t rc = png.openRAM(fileBytes, bytesCount, &PNGDecoder::pngDraw);
     if (rc == PNG_SUCCESS) {
         LOGF_D("image specs: (%d x %d), %d bpp, pixel type: %d\n", 
             png.getWidth(), png.getHeight(), png.getBpp(), png.getPixelType());
@@ -35,38 +23,6 @@ void PNGDecoder::decode(const std::string &filepath, IDrawTarget &iDrawTarget,
         // How long did rendering take...
         LOGF_D("Decoded in %dms\n", millis()-dt);
     }
-}
-
-
-
-
-void * PNGDecoder::pngOpen(const char *filename, int32_t *size) {
-  LOGF_D("Attempting to open %s\n", filename);
-  PNGDecoder::file = std::make_unique<File>(LittleFS.open(filename, "r"));
-  *size = PNGDecoder::file->size();
-  LOGF_D("File size: %d\n", *size);
-  return &PNGDecoder::file;
-}
-
-void PNGDecoder::pngClose(void *handle) {
-  if (PNGDecoder::file) {
-    PNGDecoder::file->close();
-    PNGDecoder::file = nullptr;
-  }
-}
-
-int32_t PNGDecoder::pngRead(PNGFILE *page, uint8_t *buffer, int32_t length) {
-  LOG_D("pngRead");
-  if (!PNGDecoder::file) return 0;
-  page = page; // Avoid warning
-  return PNGDecoder::file->read(buffer, length);
-}
-
-int32_t PNGDecoder::pngSeek(PNGFILE *page, int32_t position) {
-  LOG_D("pngSeek");
-  if (!PNGDecoder::file) return 0;
-  page = page; // Avoid warning
-  return PNGDecoder::file->seek(position);
 }
 
 int PNGDecoder::pngDraw(PNGDRAW *pDraw) {

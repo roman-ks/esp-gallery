@@ -16,8 +16,7 @@ class Decoder {
             :delegatingFactories(delegatingFactories), createdDelegates(){}
         virtual ~Decoder();
 
-        virtual void init()=0;
-        virtual void decode(const std::string &filepath, IDrawTarget &iDrawTarget) = 0;
+        virtual void decode(uint8_t *fileBytes, size_t bytesCount, IDrawTarget &iDrawTarget) = 0;
         IDrawTarget* wrapWithDelegates(IDrawTarget *target); 
         void destroyWrappingDelegates();      
     protected:

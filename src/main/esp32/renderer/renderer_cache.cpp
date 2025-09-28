@@ -6,7 +6,7 @@
 #include "SD.h"
 
 
-RendererCache::RendererCache(fs::FS fileSys):fileSys(fileSys), cache(), written(){
+RendererCache::RendererCache(fs::FS &fileSys):fileSys(fileSys), cache(), written(){
     createDir(std::string("/c"));
 }
 

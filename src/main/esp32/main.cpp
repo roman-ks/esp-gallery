@@ -32,12 +32,6 @@ void setup() {
     while(1);
   }
 
-  // todo remove once fully migrated to SD
-  if(!LittleFS.begin()){
-    LOG_W("An Error has occurred while mounting LittleFS");
-    while(1);
-  }
-
   // TFT has to start first because it sets up the SPI bus
   tft.begin();
 
@@ -49,9 +43,10 @@ void setup() {
     while(1);
   }
   
-  rendererCache = std::make_unique<RendererCache>(SD); 
-  renderer = std::make_unique<TFTRenderer>(tft, *rendererCache);
-  gallery = std::make_unique<Gallery>(*renderer, *rendererCache);
+  fs::FS &fileSys = SD;
+  rendererCache = std::make_unique<RendererCache>(fileSys); 
+  renderer = std::make_unique<TFTRenderer>(tft, *rendererCache, fileSys);
+  gallery = std::make_unique<Gallery>(*renderer, *rendererCache, fileSys);
   controller = std::make_unique<Controller>(*gallery);
 
   tft.begin();

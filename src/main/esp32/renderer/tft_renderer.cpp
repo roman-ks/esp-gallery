@@ -10,6 +10,10 @@
 
 
 TFTRenderer::~TFTRenderer() {
+    if(fileBytes){
+        free(fileBytes);
+        fileBytes = nullptr;
+    }
 }
 
 void TFTRenderer::init() {
@@ -29,11 +33,14 @@ void TFTRenderer::render(const GIFImage &gifImage) {
         renderCachable(offsettingDrawTarget, gifImage);
     } else {
         LOGF_D("Not cachable %s: %d\n",gifImage.filePath, id);
-        tft.startWrite(); // The TFT chip select is locked low
         if (lastRenderedId != id) {
-            gifImage.getDecoder().decode(gifImage.filePath, offsettingDrawTarget);
+            size_t imgBytes = readImage(gifImage);
+
+            tft.startWrite(); // The TFT chip select is locked low
+            gifImage.getDecoder().decode(fileBytes, imgBytes, offsettingDrawTarget);
             lastRenderedId = id;
         } else {
+            tft.startWrite(); // The TFT chip select is locked low
             gifImage.getDecoder().advance(offsettingDrawTarget);
         }
         tft.endWrite(); // The TFT chip select is locked low
@@ -53,8 +60,10 @@ void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
         tft.endWrite(); // The TFT chip select is locked low
     } else {
         CapturingDrawTarget capturingDrawTarget(&delegate);
-         tft.startWrite(); // The TFT chip select is locked low
-        image.getDecoder().decode(image.filePath, capturingDrawTarget);
+        size_t imgBytes = readImage(image);
+
+        tft.startWrite(); // The TFT chip select is locked low
+        image.getDecoder().decode(fileBytes, imgBytes, capturingDrawTarget);
         tft.endWrite(); // The TFT chip select is locked low
 
         cache.put(image.filePath, std::move(capturingDrawTarget.getCaptured()));
@@ -72,8 +81,10 @@ void TFTRenderer::render(const PNGImage &pngImage) {
     if (pngImage.cachable) {
         renderCachable(offsettingDrawTarget, pngImage);
     } else {
+        size_t imgBytes = readImage(pngImage);
+
         tft.startWrite(); // The TFT chip select is locked low
-        pngImage.getDecoder().decode(pngImage.filePath, offsettingDrawTarget);
+        pngImage.getDecoder().decode(fileBytes, imgBytes, offsettingDrawTarget);
         tft.endWrite(); // The TFT chip select is locked low
     }
 
@@ -90,6 +101,27 @@ void TFTRenderer::renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
   tft.fillRect(x+thickness, y, w-2*thickness, thickness, color);  
   tft.fillRect(x+thickness, y+h-thickness, w-2*thickness, thickness, color);
 
+}
+
+size_t TFTRenderer::readImage(const Image &image){
+    if(!fileBytes){
+        LOG_W("No memory for file bytes");
+        return 0;
+    }
+    fs::File file = fileSys.open(image.filePath.c_str(), FILE_READ);
+    if(!file){
+        LOGF_W("Failed to open %s\n", image.filePath.c_str());
+        return 0;
+    }
+    size_t readBytes = file.read(fileBytes, MAX_FILE_SIZE);
+    if(readBytes == 0){
+        LOGF_W("Failed to read from %s\n", image.filePath.c_str());
+        file.close();
+        return 0;
+    }
+    LOGF_D("Read %d bytes from %s\n", readBytes, image.filePath.c_str());
+    file.close();
+    return readBytes;
 }
 
 

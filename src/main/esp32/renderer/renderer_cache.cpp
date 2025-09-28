@@ -1,5 +1,5 @@
 #include "renderer_cache.h"
-#define LOG_LEVEL 1
+#define LOG_LEVEL 2
 #include "../log.h"
 #include <cstdLib>
 #include "../../core/configs.h"

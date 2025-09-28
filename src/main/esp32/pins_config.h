@@ -11,9 +11,9 @@
 #define TFT_DC    D1  // Data Command control pin
 #define TFT_RST   D2  // Reset pin (could connect to RST pin)
 
-#define SCROLL_RIGHT_BUTTON 43
-#define ENTER_BUTTON        44
-#define BUTTON_INDEX_OFFSET 43
+#define SCROLL_RIGHT_BUTTON 5
+#define ENTER_BUTTON        6
+#define BUTTON_INDEX_OFFSET 5
 
 #define SD_CS    4
 

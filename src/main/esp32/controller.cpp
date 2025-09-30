@@ -91,13 +91,14 @@ void Controller::resetPress(int pin) {
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     uint32_t now = micros();
     portENTER_CRITICAL(&timerMux);
+    uint32_t start = presses[pinIndex][0];
     uint32_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     if(end == 0){
         return;
     }
     bool reset = false;
-    if(now - end > PRESS_TTL){
+    if(now - end > PRESS_TTL && start == buttonPressHandledTime[pinIndex]){
         portENTER_CRITICAL(&timerMux);
         presses[pinIndex][0] = 0;
         presses[pinIndex][1] = 0;
@@ -161,6 +162,7 @@ bool Controller::isButtonLongPressed(int pin){
             uint32_t now = micros();
             if(now - buttonLongPressHandledTime[pinIndex] > LONG_PRESS_INTERVAL){
                 buttonLongPressHandledTime[pinIndex] = now;
+                buttonPressHandledTime[pinIndex] = start;
                 return true;
             }
         }

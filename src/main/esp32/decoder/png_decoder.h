@@ -7,7 +7,6 @@
 #include <memory>
 #include "../../core/configs.h"
 
-
 class PNGDecoder : public Decoder {
     public:
         PNGDecoder() = default;
@@ -15,8 +14,7 @@ class PNGDecoder : public Decoder {
 
         virtual ~PNGDecoder()=default;
 
-        void init() override;
-        void decode(const std::string &filepath, IDrawTarget &iDrawTarget) override;
+        void decode(uint8_t *fileBytes, size_t bytesCount, IDrawTarget &iDrawTarget) override;
     protected: 
         static uint16_t* getLineBuffer(){
             return lineBuffer;
@@ -29,9 +27,6 @@ class PNGDecoder : public Decoder {
             iDrawTarget = target;
         }
 
-        void decode(const std::string &filepath, IDrawTarget &iDrawTarget, 
-                        PNG_OPEN_CALLBACK *openCB, PNG_CLOSE_CALLBACK *closeCB,
-                        PNG_READ_CALLBACK *readCB, PNG_SEEK_CALLBACK *seekCB, PNG_DRAW_CALLBACK *drawCB);
         static void * pngOpen(const char *filename, int32_t *size);
         static void pngClose(void *handle);
         static int32_t pngRead(PNGFILE *page, uint8_t *buffer, int32_t length);
@@ -40,7 +35,6 @@ class PNGDecoder : public Decoder {
         static int pngDraw(PNGDRAW *pDraw);
 
         inline static IDrawTarget *iDrawTarget = nullptr;
-        inline static std::unique_ptr<File> file = nullptr;
         inline static PNG png = PNG();
         inline static uint16_t lineBuffer[MAX_IMAGE_WIDTH];
 };

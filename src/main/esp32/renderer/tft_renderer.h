@@ -6,11 +6,14 @@
 #include <map>
 #include "pixels_holder.h"
 #include "renderer_cache.h"
+#define MAX_FILE_SIZE (256*1024) // 256KB
 
 class TFTRenderer : public Renderer {
     public:
-        TFTRenderer(TFT_eSPI &tft, RendererCache &cache)
-            : tft(tft), cache(cache) {}
+        TFTRenderer(TFT_eSPI &tft, RendererCache &cache, fs::FS &fileSys)
+            : tft(tft), cache(cache), fileSys(fileSys) {
+                fileBytes = static_cast<uint8_t*>(ps_malloc(MAX_FILE_SIZE * sizeof(uint8_t)));
+        }
         ~TFTRenderer();
 
         void init() override;
@@ -26,8 +29,11 @@ class TFTRenderer : public Renderer {
     private:
         TFT_eSPI &tft;
         RendererCache &cache;
+        fs::FS &fileSys;
+        uint8_t *fileBytes = nullptr;
 
         void renderCachable(IDrawTarget &delegate, const Image &image);
+        size_t readImage(const Image &image);
 
 
 };

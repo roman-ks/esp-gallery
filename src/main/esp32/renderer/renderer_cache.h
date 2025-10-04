@@ -11,9 +11,9 @@ class RendererCache {
     private:
         std::unordered_map<std::string, std::unique_ptr<PixelsHolder>> cache;
         std::unordered_set<std::string> written;
-        fs::FS fileSys;
+        fs::FS &fileSys;
     public:
-        RendererCache(fs::FS fileSys);
+        RendererCache(fs::FS &fileSys);
         bool exists(const std::string &key);
         PixelsHolder& get(const std::string &key);
         void put(const std::string &key, std::unique_ptr<PixelsHolder> value);

@@ -4,11 +4,16 @@
 #include "capturing_draw_target.h"
 #include "pixels_holder.h"
 #include "../../core/configs.h"
+#define LOG_LEVEL 2
 #include "../log.h"
 #include <memory>
 
 
 TFTRenderer::~TFTRenderer() {
+    if(fileBytes){
+        free(fileBytes);
+        fileBytes = nullptr;
+    }
 }
 
 void TFTRenderer::init() {
@@ -22,36 +27,48 @@ void TFTRenderer::reset() {
 void TFTRenderer::render(const GIFImage &gifImage) {
     static uint16_t lastRenderedId = 0;
     OffsettingDrawTarget offsettingDrawTarget(this, gifImage.xPos, gifImage.yPos);
-    tft.startWrite(); // The TFT chip select is locked low
 
     uint16_t id = gifImage.id;
     if (gifImage.cachable) {
         renderCachable(offsettingDrawTarget, gifImage);
     } else {
-        // LOGF("Not cachable %s: %d\n",gifImage.filePath, id);
+        LOGF_D("Not cachable %s: %d\n",gifImage.filePath, id);
         if (lastRenderedId != id) {
-            gifImage.getDecoder().decode(gifImage.filePath, offsettingDrawTarget);
+            size_t imgBytes = readImage(gifImage);
+
+            tft.startWrite(); // The TFT chip select is locked low
+            gifImage.getDecoder().decode(fileBytes, imgBytes, offsettingDrawTarget);
             lastRenderedId = id;
         } else {
+            tft.startWrite(); // The TFT chip select is locked low
             gifImage.getDecoder().advance(offsettingDrawTarget);
         }
+        tft.endWrite(); // The TFT chip select is locked low
     }
-    tft.endWrite(); // The TFT chip select is locked low
 }
 
 void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
     uint16_t id = image.id;
     if (cache.exists(image.filePath)) {
         PixelsHolder &cached = cache.get(image.filePath);
-        // LOGF("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cache[id]->width, cache[id]->height, cache[id]->pixels.size());
+        LOGF_D("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cached.width, cached.height, cached.pixels.size());
+        
+        tft.startWrite(); // The TFT chip select is locked low
         delegate.setAddrWindow(0,0, cached.width, cached.height);
         auto pixels = cached.pixels;
         delegate.pushPixels(pixels.data(), pixels.size());
+        tft.endWrite(); // The TFT chip select is locked low
     } else {
         CapturingDrawTarget capturingDrawTarget(&delegate);
-        image.getDecoder().decode(image.filePath, capturingDrawTarget);
+        size_t imgBytes = readImage(image);
+
+        tft.startWrite(); // The TFT chip select is locked low
+        image.getDecoder().decode(fileBytes, imgBytes, capturingDrawTarget);
+        tft.endWrite(); // The TFT chip select is locked low
+
         cache.put(image.filePath, std::move(capturingDrawTarget.getCaptured()));
-        // LOGF("Caching %s: %d (w:%d, h%d)\n",image.filePath, id, cache[id]->width, cache[id]->height);
+        PixelsHolder &cached = cache.get(image.filePath);
+        LOGF_D("Cached %s: %d (w:%d, h%d)\n",image.filePath, id, cached.width, cached.height);
     }
 }
 
@@ -60,14 +77,16 @@ void TFTRenderer::render(const PNGImage &pngImage) {
     if(lastRenderedId == pngImage.id)
         return;
     OffsettingDrawTarget offsettingDrawTarget(this, pngImage.xPos, pngImage.yPos);
-    tft.startWrite(); // The TFT chip select is locked low
 
     if (pngImage.cachable) {
         renderCachable(offsettingDrawTarget, pngImage);
     } else {
-        pngImage.getDecoder().decode(pngImage.filePath, offsettingDrawTarget);
+        size_t imgBytes = readImage(pngImage);
+
+        tft.startWrite(); // The TFT chip select is locked low
+        pngImage.getDecoder().decode(fileBytes, imgBytes, offsettingDrawTarget);
+        tft.endWrite(); // The TFT chip select is locked low
     }
-    tft.endWrite(); // The TFT chip select is locked low
 
     lastRenderedId = pngImage.id;
 }
@@ -84,17 +103,38 @@ void TFTRenderer::renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 
 }
 
+size_t TFTRenderer::readImage(const Image &image){
+    if(!fileBytes){
+        LOG_W("No memory for file bytes");
+        return 0;
+    }
+    fs::File file = fileSys.open(image.filePath.c_str(), FILE_READ);
+    if(!file){
+        LOGF_W("Failed to open %s\n", image.filePath.c_str());
+        return 0;
+    }
+    size_t readBytes = file.read(fileBytes, MAX_FILE_SIZE);
+    if(readBytes == 0){
+        LOGF_W("Failed to read from %s\n", image.filePath.c_str());
+        file.close();
+        return 0;
+    }
+    LOGF_D("Read %d bytes from %s\n", readBytes, image.filePath.c_str());
+    file.close();
+    return readBytes;
+}
+
 
 // iDrawTarget
 
 void TFTRenderer::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
-    // LOGF("Window addr (%d,%d), (%d,%d)\n", x,y,w,h);
+    LOGF_D("Window addr (%d,%d), (%d,%d)\n", x,y,w,h);
 
     tft.setAddrWindow(x,y, w, h);
 }
 
 void TFTRenderer::pushPixels(const void *pixels, uint32_t count){
-    // LOGF("Pushing pixels %d\n", count);
+    LOGF_D("Pushing pixels %d\n", count);
 
     tft.pushPixels(pixels, count);
 }    

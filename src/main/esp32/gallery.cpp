@@ -3,7 +3,7 @@
 #include "../core/configs.h"
 #include <cstring>
 #include "thumbnail_utils.h"
-#define LOG_LEVEL 3
+#define LOG_LEVEL 2
 #include "log.h"
 
 Gallery::~Gallery() {
@@ -11,7 +11,7 @@ Gallery::~Gallery() {
 
 void Gallery::init() {
     thumbnailsPerPage = GRID_MAX_COLS*GRID_MAX_ROWS;
-    fs::File root = LittleFS.open("/", "r");
+    fs::File root = fileSys.open("/", FILE_READ);
     while(fs::File file = root.openNextFile()){
         if(file.isDirectory())
           continue;

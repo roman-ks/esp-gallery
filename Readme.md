@@ -28,3 +28,9 @@ cmake -S . -B build -G "MinGW Makefiles"
 ```
 C:\Users\<user>\.platformio\packages\toolchain-xtensa-esp32s3\bin\xtensa-esp32s3-elf-addr2line.exe -pf -e .\Read_User_Setup.ino.elf 0x42003ec8:0x3fcebcc0
 ```
+
+## XAIO S3 Debug
+1. get https://zadig.akeo.ie/
+2. Options->List all devices
+3. make USB JTAG/serial debug unit (Interface 2) -> libusbk
+4. make USB JTAG/serial debug unit (Interface 0) -> usbser

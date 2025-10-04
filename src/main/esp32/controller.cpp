@@ -1,11 +1,9 @@
 #include "controller.h"
 #define LOG_LEVEL 2
 #include "log.h"
+#include "pins_config.h"
 
 
-#define SCROLL_RIGHT_BUTTON 5
-#define ENTER_BUTTON 4
-#define BUTTON_INDEX_OFFSET 4
 // in micros
 #define SHORT_PRESS_THRESHOLD 100000
 #define LONG_PRESS_THRESHOLD 500000
@@ -41,7 +39,6 @@ void Controller::onButtonTimer() {
         }
         presses[pinIndex][1] = now;        // update last seen press
         portEXIT_CRITICAL_ISR(&timerMux);
-        timerCount++;
     }
 
     pin = ENTER_BUTTON;
@@ -70,20 +67,19 @@ void Controller::initButton(int pin){
 
 void Controller::loop(){
     if(isButtonLongPressed(SCROLL_RIGHT_BUTTON)){
-        LOG("Scroll right button long pressed");
+        LOG_I("Scroll right button long pressed");
         handleRightButtonLongPress();
     }
     if(isButtonPressed(SCROLL_RIGHT_BUTTON)){
-        LOG("Scroll right button pressed");
+        LOG_I("Scroll right button pressed");
         handleRightButtonPress();
     } else if(isButtonPressed(ENTER_BUTTON)){
-        LOG("Enter button pressed");
+        LOG_I("Enter button pressed");
         handleEnterButtonPress();
     } else {
         // No button pressed, keep drawing current image if any
         gallery.draw();
     }
-    LOGF_D("Timer count: %d\n", timerCount);
     resetPress(SCROLL_RIGHT_BUTTON);
     resetPress(ENTER_BUTTON);
 
@@ -93,13 +89,14 @@ void Controller::resetPress(int pin) {
     size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
     uint32_t now = micros();
     portENTER_CRITICAL(&timerMux);
+    uint32_t start = presses[pinIndex][0];
     uint32_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     if(end == 0){
         return;
     }
     bool reset = false;
-    if(now - end > PRESS_TTL){
+    if(now - end > PRESS_TTL && start == buttonPressHandledTime[pinIndex]){
         portENTER_CRITICAL(&timerMux);
         presses[pinIndex][0] = 0;
         presses[pinIndex][1] = 0;
@@ -163,6 +160,7 @@ bool Controller::isButtonLongPressed(int pin){
             uint32_t now = micros();
             if(now - buttonLongPressHandledTime[pinIndex] > LONG_PRESS_INTERVAL){
                 buttonLongPressHandledTime[pinIndex] = now;
+                buttonPressHandledTime[pinIndex] = start;
                 return true;
             }
         }

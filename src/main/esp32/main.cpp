@@ -1,7 +1,7 @@
 #include "main.h"
 #include <Arduino.h>
 #include "image/gif_image.h"
-#include "LittleFS.h"
+#include "SD.h"
 // #include <vector>
 // #include "mbedtls/base64.h"
 #include "controller.h"
@@ -10,6 +10,8 @@
 #include <memory>
 #include "log.h"
 #include "renderer/renderer_cache.h"
+#include "pins_config.h"
+#include "utils/sd_init.h"
 
 // // Include the TFT library https://github.com/Bodmer/TFT_eSPI
 #include "SPI.h"
@@ -21,29 +23,33 @@ std::unique_ptr<Renderer> renderer;
 std::unique_ptr<Gallery> gallery;
 std::unique_ptr<Controller> controller;
 
-Image *img;
-
-#include "image/image_factory.h"
 void setup() {
 
   Serial.begin(115200);
 
   if(!psramFound()){
-    LOG("PSRAM not found!");
-    while(0);
+    LOG_W("PSRAM not found!");
+    while(1);
   }
 
-  if(!LittleFS.begin()){
-    LOG("An Error has occurred while mounting LittleFS");
-    return;
+  // TFT has to start first because it sets up the SPI bus
+  tft.begin();
+  tft.fillScreen(TFT_BLACK);
+
+  // SD card uses same SPI so take clock from TFT
+  SdIniter sdIniter(TFT_SCLK, SD_CS, tft.getSPIinstance());
+  if(!sdIniter.init()){
+    // todo write to TFT
+    LOG_W("SD Card Mount Failed");
+    while(1);
   }
   
-  rendererCache = std::make_unique<RendererCache>(LittleFS); 
-  renderer = std::make_unique<TFTRenderer>(tft, *rendererCache);
-  gallery = std::make_unique<Gallery>(*renderer, *rendererCache);
+  fs::FS &fileSys = SD;
+  rendererCache = std::make_unique<RendererCache>(fileSys); 
+  renderer = std::make_unique<TFTRenderer>(tft, *rendererCache, fileSys);
+  gallery = std::make_unique<Gallery>(*renderer, *rendererCache, fileSys);
   controller = std::make_unique<Controller>(*gallery);
 
-  tft.begin();
   renderer->init();
   controller->init();
   gallery->init();

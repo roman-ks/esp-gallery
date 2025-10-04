@@ -14,8 +14,8 @@
 
 class Gallery {
     public:
-        Gallery(Renderer &renderer, RendererCache &rendererCache): 
-            renderer(renderer), rendererCache(rendererCache), 
+        Gallery(Renderer &renderer, RendererCache &rendererCache, fs::FS &fileSys): 
+            renderer(renderer), rendererCache(rendererCache), fileSys(fileSys), 
             images(), thumbnails() {};
         ~Gallery();
 
@@ -31,6 +31,7 @@ class Gallery {
     private:
         Renderer &renderer; 
         RendererCache &rendererCache; 
+        fs::FS &fileSys;
         std::vector<Image*> images;
         std::vector<Image*> thumbnails;
         std::span<Image*> thumbnailsOnPage;

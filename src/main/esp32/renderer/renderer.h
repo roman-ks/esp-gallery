@@ -14,7 +14,7 @@ class Renderer : public IDrawTarget {
         virtual void render(const GIFImage &gifImage) = 0;
         virtual void render(const PNGImage &pngImage) = 0;
         virtual void renderBorder(uint16_t x, uint16_t y, uint16_t w, uint16_t h, 
-                                  uint16_t thickness, uint32_t color);
+                                  uint16_t thickness, uint32_t color) = 0;
     private:
 };
 

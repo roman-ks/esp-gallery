@@ -1,5 +1,5 @@
 #include "controller.h"
-#define LOG_LEVEL 2
+#define LOG_LEVEL 1
 #include "log.h"
 #include "pins_config.h"
 
@@ -17,19 +17,21 @@ Controller::~Controller() {
 }
 
 void Controller::init(){
-    initButton(SCROLL_RIGHT_BUTTON);
+    LOGF_D("presses: %d, buttonPressHandledTime: %d, buttonLongPressHandledTime: %d\n", 
+        sizeof(presses), sizeof(buttonPressHandledTime), sizeof(buttonLongPressHandledTime));
+    initButton(SCROLL_LEFT_BUTTON);
     initButton(ENTER_BUTTON);
+    initButton(SCROLL_RIGHT_BUTTON);
 
     buttonTimer = timerBegin(1000000);
     timerAttachInterrupt(buttonTimer, &onButtonTimer); 
     timerAlarm(buttonTimer, 2000, true, 0);
-
 }
 
 
 void Controller::onButtonTimer() {
     int pin = SCROLL_RIGHT_BUTTON;
-    size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
+    size_t pinIndex = GET_BUTTON_INDEX(pin);
     bool pressed = digitalRead(pin) == LOW;
     uint32_t now = micros(); // high-resolution timestamp
     if (pressed) {
@@ -42,7 +44,7 @@ void Controller::onButtonTimer() {
     }
 
     pin = ENTER_BUTTON;
-    pinIndex = pin-BUTTON_INDEX_OFFSET;
+    pinIndex = GET_BUTTON_INDEX(pin);
     pressed = digitalRead(pin) == LOW;
     now = micros(); // high-resolution timestamp
     if (pressed) {
@@ -53,27 +55,41 @@ void Controller::onButtonTimer() {
         presses[pinIndex][1] = now;        // update last seen press
         portEXIT_CRITICAL_ISR(&timerMux);
     }
-   
+    
+    pin = SCROLL_LEFT_BUTTON;
+    pinIndex = GET_BUTTON_INDEX(pin);
+    pressed = digitalRead(pin) == LOW;
+    now = micros(); // high-resolution timestamp
+    if (pressed) {
+        portENTER_CRITICAL_ISR(&timerMux);
+        if (presses[pinIndex][0] == 0) {
+            presses[pinIndex][0] = now;  // first time pressed
+        }
+        presses[pinIndex][1] = now;        // update last seen press
+        portEXIT_CRITICAL_ISR(&timerMux);
+    }
 }
 
 void Controller::initButton(int pin){
     pinMode(pin, INPUT_PULLUP);
-    presses[pin-BUTTON_INDEX_OFFSET][0]=0;
-    presses[pin-BUTTON_INDEX_OFFSET][1]=0;
-    buttonPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
-    buttonLongPressHandledTime[pin-BUTTON_INDEX_OFFSET]=0;
+    presses[GET_BUTTON_INDEX(pin)][0]=0;
+    presses[GET_BUTTON_INDEX(pin)][1]=0;
+    buttonPressHandledTime[GET_BUTTON_INDEX(pin)]=0;
+    buttonLongPressHandledTime[GET_BUTTON_INDEX(pin)]=0;
 }
 
 
 void Controller::loop(){
-    if(isButtonLongPressed(SCROLL_RIGHT_BUTTON)){
+    if (isButtonLongPressed(SCROLL_RIGHT_BUTTON)){
         LOG_I("Scroll right button long pressed");
         handleRightButtonLongPress();
-    }
-    if(isButtonPressed(SCROLL_RIGHT_BUTTON)){
+    } else if (isButtonPressed(SCROLL_RIGHT_BUTTON)){
         LOG_I("Scroll right button pressed");
         handleRightButtonPress();
-    } else if(isButtonPressed(ENTER_BUTTON)){
+    } else if (isButtonPressed(SCROLL_LEFT_BUTTON)){
+        LOG_I("Scroll left button pressed");
+        handleLeftButtonPress();
+    } else if (isButtonPressed(ENTER_BUTTON)){
         LOG_I("Enter button pressed");
         handleEnterButtonPress();
     } else {
@@ -82,11 +98,11 @@ void Controller::loop(){
     }
     resetPress(SCROLL_RIGHT_BUTTON);
     resetPress(ENTER_BUTTON);
-
+    resetPress(SCROLL_LEFT_BUTTON);
 }
 
 void Controller::resetPress(int pin) {
-    size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
+    size_t pinIndex = GET_BUTTON_INDEX(pin);
     uint32_t now = micros();
     portENTER_CRITICAL(&timerMux);
     uint32_t start = presses[pinIndex][0];
@@ -102,8 +118,8 @@ void Controller::resetPress(int pin) {
         presses[pinIndex][1] = 0;
         portEXIT_CRITICAL(&timerMux);
         reset = true;
+        LOGF_D("Pin: %d, reset: %d\n", pin, reset);
     }
-    LOGF_D("Pin: %d, reset: %d\n", pin, reset);
 }
 
 void Controller::handleRightButtonPress(){
@@ -111,6 +127,14 @@ void Controller::handleRightButtonPress(){
         gallery.nextImage();
     } else {
         gallery.nextHighlight();
+    }
+}
+
+void Controller::handleLeftButtonPress(){
+    if(gallery.isImageOpen()){
+        gallery.prevImage();
+    } else {
+        gallery.prevHighlight();
     }
 }
 
@@ -129,15 +153,18 @@ void Controller::handleEnterButtonPress(){
 }
 
 bool Controller::isButtonPressed(int pin){
-    size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
+    size_t pinIndex = GET_BUTTON_INDEX(pin);
     portENTER_CRITICAL(&timerMux);
     uint32_t start = presses[pinIndex][0];
     uint32_t end   = presses[pinIndex][1];
     portEXIT_CRITICAL(&timerMux);
     
-    LOGF_D("Pin: %d, start: %lu, end: %lu, handled: %lu\n", 
-        pin, start, end, buttonPressHandledTime[pinIndex]);
+    
     if (start != 0) {
+        // if(pin==SCROLL_LEFT_BUTTON){
+        //     LOGF_D("Pin: 43, start: %lu, end: %lu\n", 
+        //         start, end);
+        // }
         if(micros() - end > PRESS_TTL && end - start > SHORT_PRESS_THRESHOLD){
             if(start > buttonPressHandledTime[pinIndex]){
                 buttonPressHandledTime[pinIndex] = start;
@@ -149,7 +176,7 @@ bool Controller::isButtonPressed(int pin){
 }
 
 bool Controller::isButtonLongPressed(int pin){
-    size_t pinIndex = pin-BUTTON_INDEX_OFFSET;
+    size_t pinIndex = GET_BUTTON_INDEX(pin);
     portENTER_CRITICAL(&timerMux);
     uint32_t start = presses[pinIndex][0];
     uint32_t end   = presses[pinIndex][1];

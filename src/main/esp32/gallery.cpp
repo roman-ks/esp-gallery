@@ -64,6 +64,17 @@ void Gallery::nextImage(){
     images[imageIndex]->render(renderer);
 }
 
+void Gallery::prevImage(){
+    LOG_D("prevImage");
+    imageIndex--;
+    if(imageIndex < 0){
+        imageIndex = images.size()-1;
+    }
+    renderer.reset();
+    images[imageIndex]->render(renderer);
+}
+
+
 void Gallery::nextHighlight(){
     // overwrite current highlight
     drawHighlightBox(BG_COLOR);   
@@ -71,7 +82,23 @@ void Gallery::nextHighlight(){
 
     goToNextHighlightBox();
     drawHighlightBox(HIGHLIGHT_COLOR);  
-  }
+}
+
+void Gallery::prevHighlight(){
+    // overwrite current highlight
+    drawHighlightBox(BG_COLOR);   
+    showThumbnail(highlightIndex);
+
+    highlightIndex--;
+    LOGF_D("Highlighting index %d\n", highlightIndex);
+ 
+    if(highlightIndex < 0){
+        prevPage();
+        highlightIndex = thumbnailsPerPage-1;
+        LOGF_D("Resetting highlight index to %d\n", highlightIndex);
+    }
+    drawHighlightBox(HIGHLIGHT_COLOR);  
+}
 
 bool Gallery::isImageOpen(){
     return imageIndex >= 0;
@@ -98,18 +125,30 @@ void Gallery::goToNextHighlightBox(){
   LOGF_D("Highlighting index %d\n", highlightIndex);
  
   if(highlightIndex >= thumbnailsPerPage || highlightIndex+ pageNum*thumbnailsPerPage>= thumbnails.size()){
-    LOG_D("Resetting highlight index");
     highlightIndex=0;
+    LOGF_D("Resetting highlight index to %d\n", highlightIndex);
     nextPage();
   }
 }
 
 void Gallery::nextPage(){
-    lastLoadedThumbnailIndex = 0;
-    pageNum++;
+  pageNum++;
     if(pageNum >= pageCount){
-      pageNum=0;
+        pageNum=0;
     }
+    updatePage();
+}
+
+void Gallery::prevPage(){
+    pageNum--;
+    if(pageNum < 0){
+      pageNum=pageCount-1; 
+    }
+    updatePage();
+}
+
+void Gallery::updatePage(){
+    lastLoadedThumbnailIndex = 0;
     thumbnailsOnPage = getThumbnailsOnPage(pageNum);
     LOGF_D("Thumbnails on page %d: %d\n", pageNum, thumbnailsOnPage.size());
     renderer.reset();

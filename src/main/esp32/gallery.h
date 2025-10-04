@@ -22,8 +22,12 @@ class Gallery {
         void init();
         void draw();
         void nextImage();
+        void prevImage();
         void nextHighlight();
+        void prevHighlight();
         void nextPage();
+        void prevPage();
+        void updatePage();
         bool isImageOpen();
         void openImage();
         void closeImage();

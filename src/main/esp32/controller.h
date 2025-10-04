@@ -3,7 +3,7 @@
 
 #include "gallery.h"
 
-#define BUTTON_COUNT 2
+#define BUTTON_COUNT 3
 
 class Controller {
     public:
@@ -25,6 +25,8 @@ class Controller {
         void handleRightButtonLongPress();
 
         void handleEnterButtonPress();
+
+        void handleLeftButtonPress();
 
         bool isButtonPressed(int pin);
         bool isButtonLongPressed(int pin);

@@ -39,7 +39,6 @@ void Controller::onButtonTimer() {
         }
         presses[pinIndex][1] = now;        // update last seen press
         portEXIT_CRITICAL_ISR(&timerMux);
-        timerCount++;
     }
 
     pin = ENTER_BUTTON;
@@ -68,20 +67,19 @@ void Controller::initButton(int pin){
 
 void Controller::loop(){
     if(isButtonLongPressed(SCROLL_RIGHT_BUTTON)){
-        LOG("Scroll right button long pressed");
+        LOG_I("Scroll right button long pressed");
         handleRightButtonLongPress();
     }
     if(isButtonPressed(SCROLL_RIGHT_BUTTON)){
-        LOG("Scroll right button pressed");
+        LOG_I("Scroll right button pressed");
         handleRightButtonPress();
     } else if(isButtonPressed(ENTER_BUTTON)){
-        LOG("Enter button pressed");
+        LOG_I("Enter button pressed");
         handleEnterButtonPress();
     } else {
         // No button pressed, keep drawing current image if any
         gallery.draw();
     }
-    LOGF_D("Timer count: %d\n", timerCount);
     resetPress(SCROLL_RIGHT_BUTTON);
     resetPress(ENTER_BUTTON);
 

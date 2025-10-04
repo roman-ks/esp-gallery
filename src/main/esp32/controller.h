@@ -20,8 +20,6 @@ class Controller {
         volatile uint32_t buttonLongPressHandledTime[BUTTON_COUNT];
         inline static hw_timer_t *buttonTimer = nullptr;
         inline static portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
-        inline static volatile uint16_t timerCount = 0;
-
         
         void handleRightButtonPress();
         void handleRightButtonLongPress();

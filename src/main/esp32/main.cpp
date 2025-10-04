@@ -34,6 +34,7 @@ void setup() {
 
   // TFT has to start first because it sets up the SPI bus
   tft.begin();
+  tft.fillScreen(TFT_BLACK);
 
   // SD card uses same SPI so take clock from TFT
   SdIniter sdIniter(TFT_SCLK, SD_CS, tft.getSPIinstance());

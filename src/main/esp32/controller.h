@@ -27,6 +27,7 @@ class Controller {
         void handleEnterButtonPress();
 
         void handleLeftButtonPress();
+        void handleLeftButtonLongPress();
 
         bool isButtonPressed(int pin);
         bool isButtonLongPressed(int pin);

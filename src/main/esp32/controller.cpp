@@ -83,6 +83,9 @@ void Controller::loop(){
     if (isButtonLongPressed(SCROLL_RIGHT_BUTTON)){
         LOG_I("Scroll right button long pressed");
         handleRightButtonLongPress();
+    } else if (isButtonLongPressed(SCROLL_LEFT_BUTTON)){
+        LOG_I("Scroll left button long pressed");
+        handleLeftButtonLongPress();
     } else if (isButtonPressed(SCROLL_RIGHT_BUTTON)){
         LOG_I("Scroll right button pressed");
         handleRightButtonPress();
@@ -141,6 +144,12 @@ void Controller::handleLeftButtonPress(){
 void Controller::handleRightButtonLongPress(){
     if(!gallery.isImageOpen()){
         gallery.nextPage();
+    }
+}
+
+void Controller::handleLeftButtonLongPress(){
+    if(!gallery.isImageOpen()){
+        gallery.prevPage();
     }
 }
 

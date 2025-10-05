@@ -93,8 +93,9 @@ void Gallery::prevHighlight(){
     LOGF_D("Highlighting index %d\n", highlightIndex);
  
     if(highlightIndex < 0){
+        // set to max possible highlight index on previous page, prev page will adjust if out of range
+        highlightIndex = thumbnailsPerPage;
         prevPage();
-        highlightIndex = thumbnailsPerPage-1;
         LOGF_D("Resetting highlight index to %d\n", highlightIndex);
     }
     drawHighlightBox(HIGHLIGHT_COLOR);  
@@ -121,18 +122,18 @@ void Gallery::closeImage(){
 }
 
 void Gallery::goToNextHighlightBox(){
-  highlightIndex++;
-  LOGF_D("Highlighting index %d\n", highlightIndex);
+    highlightIndex++;
+    LOGF_D("Highlighting index %d\n", highlightIndex);
  
-  if(highlightIndex >= thumbnailsPerPage || highlightIndex+ pageNum*thumbnailsPerPage>= thumbnails.size()){
-    highlightIndex=0;
-    LOGF_D("Resetting highlight index to %d\n", highlightIndex);
-    nextPage();
-  }
+    if(highlightIndex >= thumbnailsPerPage || highlightIndex+ pageNum*thumbnailsPerPage>= thumbnails.size()){
+        highlightIndex = 0;
+        LOGF_D("Resetting highlight index to %d\n", highlightIndex);
+        nextPage();
+    }
 }
 
 void Gallery::nextPage(){
-  pageNum++;
+    pageNum++;
     if(pageNum >= pageCount){
         pageNum=0;
     }
@@ -153,6 +154,10 @@ void Gallery::updatePage(){
     LOGF_D("Thumbnails on page %d: %d\n", pageNum, thumbnailsOnPage.size());
     renderer.reset();
     showThumbnails();
+    // back off to last thumbnail if current highlight is out of range
+    while(highlightIndex >= thumbnailsOnPage.size() && highlightIndex > 0){
+        highlightIndex--;
+    }
     drawHighlightBox(HIGHLIGHT_COLOR);
 }
 

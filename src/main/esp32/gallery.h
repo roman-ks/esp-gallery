@@ -43,6 +43,7 @@ class Gallery {
         int imageIndex = -1;
         int pageNum = 0;
         int pageCount = 0;
+        int maxThumbnailsPerPage=0;
         int thumbnailsPerPage=0;
         int lastLoadedThumbnailIndex = 0;
 

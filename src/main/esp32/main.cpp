@@ -56,17 +56,18 @@ void setup() {
   }
   
   fs::FS &fileSys = SD;
-  // rendererCache = std::make_unique<RendererCache>(fileSys); 
-  // renderer = std::make_unique<TFTRenderer>(tft, *rendererCache, fileSys);
-  // gallery = std::make_unique<Gallery>(*renderer, *rendererCache, fileSys);
+  rendererCache = std::make_unique<RendererCache>(fileSys); 
+  renderer = std::make_unique<TFTRenderer>(tft, *rendererCache, fileSys);
+  gallery = std::make_unique<Gallery>(*renderer, *rendererCache, fileSys);
   std::vector<std::unique_ptr<IController>> controllers;
-  // controllers.push_back(std::make_unique<GalleryController>(*gallery));
+  controllers.push_back(std::make_unique<GalleryController>(*gallery));
   controllers.push_back(std::make_unique<MscController>(tft));
   mainController = std::make_unique<MainController>(std::move(controllers));
 
-  // renderer->init();
+  // todo decide if renderer has to be initialized here or in gallery
+  renderer->init();
   mainController->init();
-  // gallery->init();
+  gallery->init();
 }
 
 void loop() {

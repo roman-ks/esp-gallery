@@ -10,9 +10,10 @@ void MscController::onPause(){
 
 void MscController::onResume(){
     if(usb_msc == nullptr){
+        tft.fillScreen(TFT_BLACK);
         tft.setCursor(0, 2, 2);
         tft.setTextColor(TFT_WHITE);
-        tft.println(" USB mode activating...");
+        tft.println(" USB Drive mode activating...");
         LOGF_I("ARDUINO_USB_MODE: %d\n", ARDUINO_USB_MODE);
         uint32_t sectors = SD.numSectors();
         sectorSize = SD.sectorSize();
@@ -28,7 +29,8 @@ void MscController::onResume(){
 
         usb_msc->begin(sectors, sectorSize);
         USB.begin();
-        tft.println(" USB mode activated");
+        tft.println(" USB Drive mode activated");
+        tft.println("\n\n Reboot to exit USB Drive mode");
 
         LOG_I("USB MSC started");
         // tft.println(" USB mode activated");

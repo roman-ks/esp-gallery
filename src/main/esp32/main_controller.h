@@ -26,6 +26,8 @@ class MainController {
         inline static hw_timer_t *buttonTimer = nullptr;
         inline static portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
+        void switchController();
+
         bool isButtonPressed(int pin);
         bool isButtonLongPressed(int pin);
 

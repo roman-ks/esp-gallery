@@ -87,6 +87,9 @@ void MainController::loop(){
     } else if (isButtonLongPressed(SCROLL_LEFT_BUTTON)){
         LOG_I("Scroll left button long pressed");
         controllers[activeControllerIndex]->handleLeftButtonLongPress();
+    } else if (isButtonLongPressed(ENTER_BUTTON)){
+        LOG_I("Enter button long pressed");
+        switchController();
     } else if (isButtonPressed(SCROLL_RIGHT_BUTTON)){
         LOG_I("Scroll right button pressed");
         controllers[activeControllerIndex]->handleRightButtonPress();
@@ -162,4 +165,16 @@ bool MainController::isButtonLongPressed(int pin){
         }
     }
     return false;
+}
+
+void MainController::switchController(){
+    LOG_I("Switching controller");
+    controllers[activeControllerIndex]->onPause();
+    LOGF_I("Paused controller %d", activeControllerIndex);
+
+    activeControllerIndex = (activeControllerIndex + 1) % controllers.size();
+
+    LOGF_I("Resuming controller %d", activeControllerIndex);
+    controllers[activeControllerIndex]->onResume();
+    LOG_I("Switched controller");
 }

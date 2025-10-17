@@ -5,8 +5,9 @@
 class AdvancableDecoder: public Decoder {
 
     public:
-        AdvancableDecoder(){}
-        AdvancableDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories):Decoder(delegatingFactories){}
+        AdvancableDecoder() = default;
+        AdvancableDecoder(DelegatingDrawTarget *firstDelegate, DelegatingDrawTarget *lastDelegate):
+            Decoder(firstDelegate, lastDelegate){}
         virtual void advance(IDrawTarget &iDrawTarget) = 0;
 
 };

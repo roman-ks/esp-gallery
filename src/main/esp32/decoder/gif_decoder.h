@@ -11,8 +11,8 @@
 class GIFDecoder: public AdvancableDecoder {
 
     public:
-        GIFDecoder();
-        GIFDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories);
+        GIFDecoder(): GIFDecoder(nullptr, nullptr) {}
+        GIFDecoder(DelegatingDrawTarget *firstDelegate, DelegatingDrawTarget *lastDelegate);
         ~GIFDecoder()=default;
 
         void decode(uint8_t *fileBytes, size_t bytesCount, IDrawTarget &iDrawTarget) override;

@@ -9,6 +9,12 @@ Gallery::~Gallery() {
 }
 
 void Gallery::init() {
+    LOG_D("Gallery init");
+    Image *splashImg = ImageFactory::createImage("/esp_gallery_data/splash.png");
+    splashImg->setPosition(0,0);
+    splashImg->render(renderer);
+    LOG_D("Splash screen shown");
+
     thumbnailsPerPage = GRID_MAX_COLS*GRID_MAX_ROWS;
     fs::File root = fileSys.open("/", FILE_READ);
     while(fs::File file = root.openNextFile()){
@@ -34,8 +40,10 @@ void Gallery::init() {
     LOGF_I("Max cols: %d, max rows: %d, thumbnails per page: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS, thumbnailsPerPage);
 
     thumbnailsOnPage = getThumbnailsOnPage(0);
+    renderer.reset();
     showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
+    delete splashImg;
 }
 
 void Gallery::draw(){

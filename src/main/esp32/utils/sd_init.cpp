@@ -6,11 +6,11 @@ bool SdIniter::init(){
     bool mounted = false;
     int attempt = 0;
     // give time to settle
-    delay(1000);
+    delay(10);
     LOG_D("Delay finished");
     do{
         pulseClock(200);
-        if (!SD.begin(cs, spi)) {
+        if (!SD.begin(cs, spi, 40000000)) {
             LOG_W("Card Mount Failed");
             SD.end();
             pulseClock(200);

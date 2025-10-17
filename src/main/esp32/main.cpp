@@ -36,19 +36,20 @@ void setup() {
   // TFT has to start first because it sets up the SPI bus
   tft.begin();
   tft.fillScreen(TFT_BLACK);
+  tft.setCursor(0, 2, 2);
+  tft.setTextColor(TFT_WHITE);
+  tft.println(" Initializing...");
 
   // SD card uses same SPI so take clock from TFT
   SdIniter sdIniter(TFT_SCLK, SD_CS, tft.getSPIinstance());
   if(!sdIniter.init()){
     // todo write to TFT
     LOG_W("SD Card Mount Failed");
+    tft.setTextColor(TFT_RED);
+    tft.println(" Failed to init SD...");
     while(1);
   }
-
-  if (!SD.begin(SD_CS, SPI, 40000000)) {
-    Serial.println("Card Mount Failed");
-    while(0);
-  }
+  tft.println("SD inited");
   
   fs::FS &fileSys = SD;
   rendererCache = std::make_unique<RendererCache>(fileSys); 
@@ -62,6 +63,7 @@ void setup() {
   // todo decide if renderer has to be initialized here or in gallery
   renderer->init();
   mainController->init();
+  tft.println("Init done");
   gallery->init();
 }
 

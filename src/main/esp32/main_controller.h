@@ -1,33 +1,32 @@
-#ifndef __ESP_GALLERY_CONTROLLER_H__
-#define __ESP_GALLERY_CONTROLLER_H__
+#pragma once
 
-#include "gallery.h"
+#include <cstdint>
+#include "i_controller.h"
+#include <vector>
+#include <memory>
+#include "Arduino.h"
 
 #define BUTTON_COUNT 3
 
-class Controller {
+class MainController {
     public:
-        Controller(Gallery &gallery) : gallery(gallery){}
-        ~Controller();
+        MainController(std::vector<std::unique_ptr<IController>>&& controllers) 
+            : controllers(std::move(controllers)) {};
+        ~MainController();
 
         void init();
         void loop();  
     private:
-        Gallery &gallery;
+        std::vector<std::unique_ptr<IController>> controllers;
+        size_t activeControllerIndex = 0;
         // pairs (press-release)
         inline static volatile uint32_t presses[BUTTON_COUNT][2];
         volatile uint32_t buttonPressHandledTime[BUTTON_COUNT];
         volatile uint32_t buttonLongPressHandledTime[BUTTON_COUNT];
         inline static hw_timer_t *buttonTimer = nullptr;
         inline static portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
-        
-        void handleRightButtonPress();
-        void handleRightButtonLongPress();
 
-        void handleEnterButtonPress();
-
-        void handleLeftButtonPress();
-        void handleLeftButtonLongPress();
+        void switchController();
 
         bool isButtonPressed(int pin);
         bool isButtonLongPressed(int pin);
@@ -36,6 +35,5 @@ class Controller {
         void resetPress(int pin);
 
         static void IRAM_ATTR onButtonTimer();
-};
 
-#endif
+};

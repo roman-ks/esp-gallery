@@ -2,7 +2,6 @@
 #include "image/image_factory.h"
 #include "../core/configs.h"
 #include <cstring>
-#include "thumbnail_utils.h"
 #define LOG_LEVEL 2
 #include "log.h"
 

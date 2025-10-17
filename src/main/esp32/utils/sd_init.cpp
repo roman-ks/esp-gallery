@@ -1,5 +1,5 @@
 #include "sd_init.h"
-#include "SD.h"
+#include "../my_sd/MySD.h"
 #include "../log.h"
 
 bool SdIniter::init(){

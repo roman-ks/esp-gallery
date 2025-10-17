@@ -1,12 +1,7 @@
 #ifndef __ESP_GALLERY_H__
 #define __ESP_GALLERY_H__
 
-#include "SPI.h"
-#include <TFT_eSPI.h>  
 #include <vector>
-#include "PNG_support.h"
-#include "thumbnail_utils.h"
-#include "LittleFS.h"
 #include "image/image.h"
 #include "renderer/renderer.h"
 #include <span>

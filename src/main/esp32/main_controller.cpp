@@ -170,11 +170,11 @@ bool MainController::isButtonLongPressed(int pin){
 void MainController::switchController(){
     LOG_I("Switching controller");
     controllers[activeControllerIndex]->onPause();
-    LOGF_I("Paused controller %d", activeControllerIndex);
+    LOGF_I("Paused controller %d\n", activeControllerIndex);
 
     activeControllerIndex = (activeControllerIndex + 1) % controllers.size();
 
-    LOGF_I("Resuming controller %d", activeControllerIndex);
+    LOGF_I("Resuming controller %d\n", activeControllerIndex);
     controllers[activeControllerIndex]->onResume();
     LOG_I("Switched controller");
 }

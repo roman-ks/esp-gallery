@@ -6,6 +6,18 @@
 
 void MscController::onPause(){
     tft.fillScreen(TFT_BLACK);
+    tft.setCursor(0, 2, 2);
+    tft.setTextColor(TFT_WHITE);
+
+    tft.println(" USB Drive mode deactivating...");
+    usb_msc->end();
+
+    tft.setTextColor(TFT_GREEN);
+    tft.println(" USB Drive mode deactivated");
+
+    tft.setTextColor(TFT_WHITE);
+    tft.println(" Rebooting...");
+    ESP.restart();
 }
 
 void MscController::onResume(){
@@ -20,7 +32,7 @@ void MscController::onResume(){
         usb_msc = std::make_unique<USBMSC>();
 
         usb_msc->vendorID("ESP32");       //max 8 chars
-        usb_msc->productID("USB_MSC");    //max 16 chars
+        usb_msc->productID("ESP_GALLERY");    //max 16 chars
         usb_msc->productRevision("1.0");  //max 4 chars
         usb_msc->onRead(onRead);
         usb_msc->onWrite(onWrite);
@@ -29,12 +41,15 @@ void MscController::onResume(){
 
         usb_msc->begin(sectors, sectorSize);
         USB.begin();
+
+        tft.setTextColor(TFT_GREEN);
         tft.println(" USB Drive mode activated");
+
+        tft.setTextColor(TFT_WHITE);
         tft.println("\n\n Reboot to exit USB Drive mode");
+        tft.println("\n\n Hold middle button to reboot");
 
         LOG_I("USB MSC started");
-        // tft.println(" USB mode activated");
-
     }
 }
 

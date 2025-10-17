@@ -3,7 +3,6 @@
 #include "../log.h"
 #include <cstdLib>
 #include "../../core/configs.h"
-#include "SD.h"
 
 
 RendererCache::RendererCache(fs::FS &fileSys):fileSys(fileSys), cache(), written(){

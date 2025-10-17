@@ -10,7 +10,11 @@ class GalleryController : public IController {
         GalleryController(Gallery &gallery) : gallery(gallery){}
         ~GalleryController();
 
+        void onPause() override {};
+        void onResume() override {};
+
         void loop() override;  
+
         void handleRightButtonPress() override;
         void handleRightButtonLongPress() override;
 

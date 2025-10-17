@@ -5,6 +5,9 @@ class IController {
         virtual void loop()=0;  
         virtual ~IController(){};
         
+        virtual void onPause() = 0;
+        virtual void onResume() = 0;
+
         virtual void handleRightButtonPress() = 0;
         virtual void handleRightButtonLongPress() = 0;
 

@@ -25,6 +25,8 @@ void MainController::init(){
     buttonTimer = timerBegin(1000000);
     timerAttachInterrupt(buttonTimer, &onButtonTimer); 
     timerAlarm(buttonTimer, 2000, true, 0);
+
+    controllers[activeControllerIndex]->onResume();
 }
 
 

@@ -1,11 +1,10 @@
 #include "main.h"
 #include <Arduino.h>
 #include "image/gif_image.h"
-#include "SD.h"
-// #include <vector>
-// #include "mbedtls/base64.h"
+#include "my_sd/MySD.h"
 #include "gallery_controller.h"
 #include "main_controller.h"
+#include "msc_controller.h"
 #include "gallery.h"
 #include "renderer/tft_renderer.h"
 #include <memory>
@@ -14,6 +13,11 @@
 #include "pins_config.h"
 #include "utils/sd_init.h"
 #include <vector>
+
+
+#include "USB.h"
+#include "USBMSC.h"
+
 
 // // Include the TFT library https://github.com/Bodmer/TFT_eSPI
 #include "SPI.h"
@@ -45,21 +49,29 @@ void setup() {
     LOG_W("SD Card Mount Failed");
     while(1);
   }
+
+  if (!SD.begin(SD_CS, SPI, 40000000)) {
+    Serial.println("Card Mount Failed");
+    while(0);
+  }
   
   fs::FS &fileSys = SD;
-  rendererCache = std::make_unique<RendererCache>(fileSys); 
-  renderer = std::make_unique<TFTRenderer>(tft, *rendererCache, fileSys);
-  gallery = std::make_unique<Gallery>(*renderer, *rendererCache, fileSys);
+  // rendererCache = std::make_unique<RendererCache>(fileSys); 
+  // renderer = std::make_unique<TFTRenderer>(tft, *rendererCache, fileSys);
+  // gallery = std::make_unique<Gallery>(*renderer, *rendererCache, fileSys);
   std::vector<std::unique_ptr<IController>> controllers;
-  controllers.push_back(std::make_unique<GalleryController>(*gallery));
+  // controllers.push_back(std::make_unique<GalleryController>(*gallery));
+  controllers.push_back(std::make_unique<MscController>(tft));
   mainController = std::make_unique<MainController>(std::move(controllers));
 
-  renderer->init();
+  // renderer->init();
   mainController->init();
-  gallery->init();
+  // gallery->init();
 }
 
 void loop() {
   mainController->loop();
 }
+
+
 

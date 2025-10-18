@@ -22,6 +22,8 @@ class RendererCache {
         std::unique_ptr<PixelsHolder> load(const std::string &key);
         bool loadAndCache(const std::string &key);
 
+        void unload(const std::string &key);
+
         void createDir(const std::string &filepath);
 
 };

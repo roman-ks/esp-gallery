@@ -1,6 +1,5 @@
 #include "gallery.h"
 #include "image/image_factory.h"
-#include "../core/configs.h"
 #define LOG_LEVEL 1
 #include "log.h"
 
@@ -46,8 +45,8 @@ void Gallery::init() {
         if(thumbnail){
           thumbnails.push_back(thumbnail);
         }
-        LOGF_I("File: %s opened in %dms (imgCreate: %dms, thumbCreate: %dms)\n", 
-              filename.c_str(), openTime, imgCreateTime, thumbCreateTime);
+        // LOGF_T("File: %s opened in %dms (imgCreate: %dms, thumbCreate: %dms)\n", 
+        //       filename.c_str(), openTime, imgCreateTime, thumbCreateTime);
     }
     pageCount = thumbnails.size()/thumbnailsPerPage + (thumbnails.size()%thumbnailsPerPage==0 ? 0: 1);
     
@@ -65,6 +64,8 @@ void Gallery::init() {
     renderer.reset();
     showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
+    thumbnailManager.setTotalPages(pageCount);
+    thumbnailManager.setCurrentPage(0);
     delete splashImg;
 }
 
@@ -72,14 +73,7 @@ void Gallery::draw(){
     if(imageIndex >= 0){
         images[imageIndex]->render(renderer);
     } else {
-        if(lastLoadedThumbnailIndex<thumbnailsPerPage){
-            int nextPage = pageNum+1;
-            if(nextPage > pageCount)
-                return;
-            int nextThumb = std::min<int>(lastLoadedThumbnailIndex+nextPage*thumbnailsPerPage, thumbnails.size()-1);
-            rendererCache.exists(thumbnails[nextThumb]->filePath);
-            lastLoadedThumbnailIndex++;
-        }
+        thumbnailManager.loadNextThumbnail();
     }
 }
 
@@ -162,6 +156,7 @@ void Gallery::goToNextHighlightBox(){
 }
 
 void Gallery::nextPage(){
+
     pageNum++;
     if(pageNum >= pageCount){
         pageNum=0;
@@ -178,7 +173,6 @@ void Gallery::prevPage(){
 }
 
 void Gallery::updatePage(){
-    lastLoadedThumbnailIndex = 0;
     thumbnailsOnPage = getThumbnailsOnPage(pageNum);
     LOGF_D("Thumbnails on page %d: %d\n", pageNum, thumbnailsOnPage.size());
     renderer.reset();
@@ -188,6 +182,7 @@ void Gallery::updatePage(){
         highlightIndex--;
     }
     drawHighlightBox(HIGHLIGHT_COLOR);
+    thumbnailManager.setCurrentPage(pageNum);
 }
 
 void Gallery::drawHighlightBox(uint32_t color){
@@ -233,5 +228,64 @@ uint16_t Gallery::getBoxX(int i){
 uint16_t Gallery::getBoxY(int i){
   return (i / GRID_MAX_COLS) * GRID_ELEMENT_HEIGHT;
 }
+
+// PageWindow
+template<size_t Radius>
+void Gallery::PageWindow<Radius>::setCurrentPage(int page){
+    if(page == current) return;
+
+    current = (page + totalPages) % totalPages;
+    updateWindow();
+}
+
+template<size_t Radius>
+bool Gallery::PageWindow<Radius>::contains(const int* arr, int len, int val){
+    for(int i=0; i<count; ++i){
+        if(arr[i] == val) return true;
+    }
+    return false;
+}
+
+template<size_t Radius>
+void Gallery::PageWindow<Radius>::updateWindow(){
+    LOGF_D("Updating current page: %d", current);
+    memccpy(oldPages, pages, sizeof(pages), sizeof(pages));
+    count = 0;
+    for(int offset = -Radius; offset <= Radius; ++offset){
+        int page = (current + offset + totalPages) % totalPages;
+        pages[count++] = page;
+    }
+
+    for(int i=0; i<count; ++i){
+        if(!contains(oldPages, count, pages[i])){
+            onAdded(pages[i]);
+        }
+    }
+
+    for(int i=0; i<count; ++i){
+        if(!contains(pages, count, oldPages[i])){
+            onRemoved(oldPages[i]);
+        }
+    }
+}
+
+// ThumbnailManager
+void Gallery::ThumbnailManager::unloadPage(int page){
+    for(auto& thumb : gallery.getThumbnailsOnPage(page)){
+        gallery.rendererCache.unload(thumb->filePath);
+    }
+}
+
+void Gallery::ThumbnailManager::loadPage(int page){
+    nextThumbnailIndex = 0;
+    currentPageThumbnails = gallery.getThumbnailsOnPage(page);
+ }
+
+bool Gallery::ThumbnailManager::loadNextThumbnail(){
+    // todo use load queue
+    return false;
+ }
+
+
 
 

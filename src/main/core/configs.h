@@ -21,4 +21,6 @@
 #define SPLACH_IMAGE_PATH "/esp_gallery_data/splash.png"
 #define SPLASH_MIN_DISPLAY_TIME_MS 500
 
+#define THUMBNAIL_PAGES_CACHED 2
+
 #endif

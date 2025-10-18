@@ -155,3 +155,7 @@ std::unique_ptr<PixelsHolder> RendererCache::load(const std::string &key){
 
     return std::make_unique<PixelsHolder>(w,h, std::move(pixels));
 }
+
+void RendererCache::unload(const std::string &key){
+    cache.erase(key);
+}

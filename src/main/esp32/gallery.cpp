@@ -1,8 +1,7 @@
 #include "gallery.h"
 #include "image/image_factory.h"
 #include "../core/configs.h"
-#include <cstring>
-#define LOG_LEVEL 2
+#define LOG_LEVEL 1
 #include "log.h"
 
 Gallery::~Gallery() {
@@ -10,29 +9,45 @@ Gallery::~Gallery() {
 
 void Gallery::init() {
     LOG_D("Gallery init");
-    Image *splashImg = ImageFactory::createImage("/esp_gallery_data/splash.png");
+    Image *splashImg = ImageFactory::createImage(SPLACH_IMAGE_PATH);
     splashImg->setPosition(0,0);
     splashImg->render(renderer);
     LOG_D("Splash screen shown");
+    uint32_t splashStart = millis();
 
     thumbnailsPerPage = GRID_MAX_COLS*GRID_MAX_ROWS;
+    uint32_t start = millis();
     fs::File root = fileSys.open("/", FILE_READ);
-    while(fs::File file = root.openNextFile()){
-        if(file.isDirectory())
-          continue;
-        char buf[1000];
-        snprintf(buf, sizeof(buf), "/%s", file.name());
-        Image *img = ImageFactory::createImage(std::string(buf));
+    LOGF_D("Opened root dir in %dms\n", millis()-start);
+
+    while(true){
+        start = millis();
+        bool isDir = false;
+        auto filename = root.getNextFileName(&isDir);
+        if(isDir)
+            continue;
+
+        if(!filename || filename.isEmpty()){
+            break;
+        }
+        uint32_t openTime = millis()-start;
+        
+        start = millis();
+        Image *img = ImageFactory::createImage(std::string(filename.c_str()));
+        uint32_t imgCreateTime = millis()-start;
         if(img){
             img->setPosition(0,0); // todo decide where to set position
             images.push_back(img);
         }
 
-        Image *thumbnail = ImageFactory::createDownscaledImage(std::string(buf));
+        start = millis();
+        Image *thumbnail = ImageFactory::createDownscaledImage(std::string(filename.c_str()));
+        uint32_t thumbCreateTime = millis()-start;
         if(thumbnail){
           thumbnails.push_back(thumbnail);
         }
-
+        LOGF_I("File: %s opened in %dms (imgCreate: %dms, thumbCreate: %dms)\n", 
+              filename.c_str(), openTime, imgCreateTime, thumbCreateTime);
     }
     pageCount = thumbnails.size()/thumbnailsPerPage + (thumbnails.size()%thumbnailsPerPage==0 ? 0: 1);
     
@@ -40,6 +55,13 @@ void Gallery::init() {
     LOGF_I("Max cols: %d, max rows: %d, thumbnails per page: %d\n", GRID_MAX_COLS, GRID_MAX_ROWS, thumbnailsPerPage);
 
     thumbnailsOnPage = getThumbnailsOnPage(0);
+
+    // keep splash for at least SPLASH_MIN_DISPLAY_TIME_MS
+    uint32_t splashDuration = millis() - splashStart;
+    if(splashDuration < SPLASH_MIN_DISPLAY_TIME_MS){
+        delay(SPLASH_MIN_DISPLAY_TIME_MS - splashDuration);
+    }
+
     renderer.reset();
     showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);

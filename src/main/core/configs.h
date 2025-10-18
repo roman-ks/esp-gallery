@@ -18,4 +18,7 @@
 
 #define BG_COLOR 0x0000
 
+#define SPLACH_IMAGE_PATH "/esp_gallery_data/splash.png"
+#define SPLASH_MIN_DISPLAY_TIME_MS 500
+
 #endif

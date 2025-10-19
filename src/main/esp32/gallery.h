@@ -59,7 +59,7 @@ class Gallery {
         template<size_t Radius>
         class PageWindow {
             public:
-                PageWindow(int totalPages, std::function<void(int)> onAdded,
+                PageWindow(int totalPages, std::function<void()> onAdded,
                            std::function<void(int)> onRemoved):
                     current(-1), totalPages(totalPages), onAdded(std::move(onAdded)), onRemoved(std::move(onRemoved)) {
                         std::fill_n(pages, windowSize, -1);
@@ -78,7 +78,7 @@ class Gallery {
                 int pages[windowSize];
                 int oldPages[windowSize];
                 int count = 0;
-                std::function<void(int)> onAdded;
+                std::function<void()> onAdded;
                 std::function<void(int)> onRemoved;
 
                 bool contains(const int* arr, int len, int val);
@@ -105,7 +105,7 @@ class Gallery {
                 size_t loadQueueNextIndex = 0;
 
                 void unloadPage(int page);
-                void loadPage(int page);
+                void loadPage();
                 void rebuildLoadQueue();
         };
         friend class ThumbnailManager;

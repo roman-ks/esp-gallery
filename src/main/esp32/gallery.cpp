@@ -55,17 +55,27 @@ void Gallery::init() {
 
     thumbnailsOnPage = getThumbnailsOnPage(0);
 
-    // keep splash for at least SPLASH_MIN_DISPLAY_TIME_MS
+    thumbnailManager.emplace(*this, pageCount);
+    thumbnailManager.value().setCurrentPage(0);
+
+    // load all thumbnails for current page
+    int loaded = 0;
+    while((loaded++<thumbnailsOnPage.size() || millis() - splashStart < SPLASH_MIN_DISPLAY_TIME_MS) 
+            && thumbnailManager.value().loadNextThumbnail()){
+        LOGF_D("Loading thumbnail on splash time: %d", loaded);
+    }
+
+   // keep splash for at least SPLASH_MIN_DISPLAY_TIME_MS
     uint32_t splashDuration = millis() - splashStart;
     if(splashDuration < SPLASH_MIN_DISPLAY_TIME_MS){
+        LOGF_D("Waiting for splash to finish %lu", splashDuration);
         delay(SPLASH_MIN_DISPLAY_TIME_MS - splashDuration);
     }
 
     renderer.reset();
     showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
-    thumbnailManager.emplace(*this, pageCount);
-    thumbnailManager.value().setCurrentPage(0);
+
     delete splashImg;
 }
 
@@ -203,7 +213,7 @@ void Gallery::showThumbnail(int i){
 }
 
 void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
-    LOGF_D("Rendering thumbnail %s\n", thumbnail->filePath.c_str());
+    LOGF_T("Rendering thumbnail %s\n", thumbnail->filePath.c_str());
     thumbnail->setPosition(x, y);
     thumbnail->render(renderer);
 }
@@ -281,24 +291,32 @@ void Gallery::PageWindow<Radius>::updateWindow(){
     }
 
     LOG_T("Created pages");
-    if(onAdded){
-        bool added=false;
-        for(int i=0; i<count; ++i){
-            if(!contains(oldPages, count, pages[i])){
-                added = true;
-            }
-        }
-        onAdded(0);
-    } else LOG_W("PageWindow: onAdded is empty");
 
+    bool callBackCalled = false;
     if(onRemoved){
         for(int i=0; i<count; ++i){
             if(oldPages[i]==-1) continue;
             if(!contains(pages, count, oldPages[i])){
                 onRemoved(oldPages[i]);
+                callBackCalled = true;
+                break;
             }
         }
     } else LOG_W("PageWindow: onRemoved is empty\n");
+
+    if(callBackCalled)
+        return;
+
+    if(onAdded){
+        bool added=false;
+        for(int i=0; i<count; ++i){
+            if(!contains(oldPages, count, pages[i])){
+                added = true;
+                break;
+            }
+        }
+        onAdded();
+    } else LOG_W("PageWindow: onAdded is empty");
 }
 
 
@@ -308,7 +326,7 @@ void Gallery::PageWindow<Radius>::updateWindow(){
 Gallery::ThumbnailManager::ThumbnailManager(Gallery &gallery, int totalPages):
     gallery(gallery),
     pageWindow(totalPages, 
-        [this](int page)->void {this->loadPage(page);},
+        [this]()->void {this->loadPage();},
         [this](int page)->void {this->unloadPage(page);}
 ){
     allImageNamesSize = gallery.thumbnails.size();
@@ -328,7 +346,7 @@ void Gallery::ThumbnailManager::unloadPage(int page){
     rebuildLoadQueue();
 }
 
-void Gallery::ThumbnailManager::loadPage(int page){
+void Gallery::ThumbnailManager::loadPage(){
     rebuildLoadQueue();
  }
 

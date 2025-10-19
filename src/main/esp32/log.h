@@ -38,7 +38,46 @@ inline const char* createLoggerName(char *file, long line){
         Serial.printf("%-40s " msg "\n", createLoggerName(__FILE__, __LINE__)); \
     } while(0)
 
-#if LOG_LEVEL <=1 
+#if LOG_LEVEL == 0
+#define LOGF_T(fmt, ...) \
+    do { \
+        Serial.printf("%-40s [TRACE] " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
+    } while(0)
+#define LOG_T(msg) \
+    do { \
+        Serial.printf("%-40s [TRACE] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
+    } while(0)
+
+#define LOGF_D(fmt, ...) \
+    do { \
+        Serial.printf("%-40s [DEBUG] " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
+    } while(0)
+#define LOG_D(msg) \
+    do { \
+        Serial.printf("%-40s [DEBUG] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
+    } while(0)
+    
+#define LOGF_I(fmt, ...) \
+    do { \
+        Serial.printf("%-40s [INFO ] " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
+    } while(0)
+
+#define LOG_I(msg) \
+    do { \
+        Serial.printf("%-40s [INFO ] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
+    } while(0)
+#define LOGF_W(fmt, ...) \
+    do { \
+        Serial.printf("%-40s [WARN ] " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
+    } while(0)
+
+#define LOG_W(msg) \
+    do { \
+        Serial.printf("%-40s [WARN ] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
+    } while(0)
+#elif LOG_LEVEL <=1 
+#define LOGF_T(fmt, ...)
+#define LOG_T(msg)
 #define LOGF_D(fmt, ...) \
     do { \
         Serial.printf("%-40s [DEBUG] " fmt, createLoggerName(__FILE__, __LINE__), ##__VA_ARGS__); \
@@ -67,6 +106,8 @@ inline const char* createLoggerName(char *file, long line){
         Serial.printf("%-40s [WARN ] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
     } while(0)
 #elif LOG_LEVEL == 2 
+#define LOGF_T(fmt, ...)
+#define LOG_T(msg)
 #define LOGF_D(fmt, ...)
 #define LOG_D(msg)
 #define LOGF_I(fmt, ...) \
@@ -88,6 +129,8 @@ inline const char* createLoggerName(char *file, long line){
         Serial.printf("%-40s [WARN ] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
     } while(0)
 #elif LOG_LEVEL == 3 
+#define LOGF_T(fmt, ...)
+#define LOG_T(msg)
 #define LOGF_D(fmt, ...)
 #define LOG_D(msg)
 #define LOGF_I(fmt, ...)
@@ -102,3 +145,12 @@ inline const char* createLoggerName(char *file, long line){
         Serial.printf("%-40s [WARN ] " msg "\n", createLoggerName(__FILE__, __LINE__)); \
     } while(0)
 #endif
+
+#define LOG_ARRAY(fmt,arr,size) \
+    do{ \
+        Serial.printf("%-40s [ ", createLoggerName(__FILE__, __LINE__));\
+        for(int i=0;i<size;i++){ \
+            Serial.printf(fmt ", ", arr[i]); \
+        } \
+        Serial.print("]\n"); \
+    } while(0)

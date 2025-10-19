@@ -5,6 +5,7 @@
 #include "image/image.h"
 #include "renderer/renderer.h"
 #include <span>
+#include <optional>
 #include "renderer/renderer_cache.h"
 #include "../core/configs.h"
 
@@ -12,7 +13,7 @@ class Gallery {
     public:
         Gallery(Renderer &renderer, RendererCache &rendererCache, fs::FS &fileSys): 
             renderer(renderer), rendererCache(rendererCache), fileSys(fileSys), 
-            images(), thumbnails(), thumbnailsOnPage(), thumbnailManager(*this) {};
+            images(), thumbnails(), thumbnailsOnPage(), thumbnailManager() {};
         ~Gallery();
 
         void init();
@@ -48,7 +49,9 @@ class Gallery {
         void showThumbnail(int index);
         void showThumbnail(Image* thumbnail, uint8_t x, uint8_t y);
         void showThumbnails();
-        std::span<Image*> getThumbnailsOnPage(uint8_t page);
+    std::span<Image*> getThumbnailsOnPage(uint8_t page);
+    template<typename T> 
+    std::span<T> getOnPage(T* arr, size_t size, int page);
                 
         uint16_t getBoxX(int i);
         uint16_t getBoxY(int i);
@@ -56,21 +59,24 @@ class Gallery {
         template<size_t Radius>
         class PageWindow {
             public:
-                PageWindow(std::function<void(int)> onAdded,
+                PageWindow(int totalPages, std::function<void(int)> onAdded,
                            std::function<void(int)> onRemoved):
-                    current(-1) {
+                    current(-1), totalPages(totalPages), onAdded(std::move(onAdded)), onRemoved(std::move(onRemoved)) {
+                        std::fill_n(pages, windowSize, -1);
+                        std::fill_n(oldPages, windowSize, -1);
                 }
 
                 void setCurrentPage(int page);
-                void setTotalPages(int pages){
-                    totalPages = pages;
+
+                std::span<int> getPages(){
+                    return std::span(pages, pages+windowSize);
                 }
             private:
-                static constexpr size_t totalCount = 2 * Radius + 1;
+                static constexpr size_t windowSize = 2 * Radius + 1;
                 int totalPages;
                 int current;
-                int pages[totalCount];
-                int oldPages[totalCount];
+                int pages[windowSize];
+                int oldPages[windowSize];
                 int count = 0;
                 std::function<void(int)> onAdded;
                 std::function<void(int)> onRemoved;
@@ -81,31 +87,29 @@ class Gallery {
 
         class ThumbnailManager{
             public: 
-                ThumbnailManager(Gallery &gallery):
-                    gallery(gallery),
-                    pageWindow(
-                        [this](int page)->void {this->loadPage(page);},
-                        [this](int page)->void {this->unloadPage(page);}
-                    ){}
+                ThumbnailManager(Gallery &gallery, int totalPages);
                 void setCurrentPage(int page){
                     pageWindow.setCurrentPage(page);
-                }
-
-                void setTotalPages(int pages){
-                    pageWindow.setTotalPages(pages);
                 }
                 bool loadNextThumbnail();
             private:
                 Gallery &gallery;
                 PageWindow<THUMBNAIL_PAGES_CACHED> pageWindow;
-                std::span<Image*> currentPageThumbnails;
-                int nextThumbnailIndex = 0;
+                std::unique_ptr<std::string[]> allImageNames;
+                size_t allImageNamesSize;
+                // Window size used by PageWindow is (2*THUMBNAIL_PAGES_CACHED + 1).
+                // Ensure loadQueue can hold filenames for the whole window (worst-case).
+                static const size_t maxLoadQueueSize = (2 * THUMBNAIL_PAGES_CACHED + 1) * GRID_MAX_COLS * GRID_MAX_ROWS;
+                std::string loadQueue[maxLoadQueueSize];
+                size_t loadQueueSize = 0;
+                size_t loadQueueNextIndex = 0;
 
                 void unloadPage(int page);
                 void loadPage(int page);
+                void rebuildLoadQueue();
         };
         friend class ThumbnailManager;
-        ThumbnailManager thumbnailManager;
+        std::optional<ThumbnailManager> thumbnailManager;
 };
 
 #endif

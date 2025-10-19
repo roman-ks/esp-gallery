@@ -64,8 +64,8 @@ void Gallery::init() {
     renderer.reset();
     showThumbnails();
     drawHighlightBox(HIGHLIGHT_COLOR);
-    thumbnailManager.setTotalPages(pageCount);
-    thumbnailManager.setCurrentPage(0);
+    thumbnailManager.emplace(*this, pageCount);
+    thumbnailManager.value().setCurrentPage(0);
     delete splashImg;
 }
 
@@ -73,7 +73,7 @@ void Gallery::draw(){
     if(imageIndex >= 0){
         images[imageIndex]->render(renderer);
     } else {
-        thumbnailManager.loadNextThumbnail();
+        thumbnailManager.value().loadNextThumbnail();
     }
 }
 
@@ -182,7 +182,7 @@ void Gallery::updatePage(){
         highlightIndex--;
     }
     drawHighlightBox(HIGHLIGHT_COLOR);
-    thumbnailManager.setCurrentPage(pageNum);
+    thumbnailManager.value().setCurrentPage(pageNum);
 }
 
 void Gallery::drawHighlightBox(uint32_t color){
@@ -209,17 +209,29 @@ void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
 }
 
 std::span<Image*> Gallery::getThumbnailsOnPage(uint8_t page){
-  uint16_t pageStart = page * thumbnailsPerPage;
-  uint16_t pageEnd;
-  if(thumbnails.size() - pageStart >= thumbnailsPerPage){
-    pageEnd = pageStart + thumbnailsPerPage;
-  } else {
-    pageEnd = thumbnails.size();
-  }
-  LOGF_D("Page %d indexes: %d-%d(out of %d)\n", page, pageStart, pageEnd, thumbnails.size());
-  return std::span{thumbnails.data() + pageStart, thumbnails.data() + pageEnd};
+  std::span<Image*> tmp_span = getOnPage<Image*>(thumbnails.data(), thumbnails.size(), page);
+//   LOGF_D("Page %d indexes: %d-%d(out of %d)\n", 
+//     page, thumbnails.data()-tmp_span.begin(), 
+//     thumbnails.data()-tmp_span.end(), thumbnails.size());
+  return tmp_span;
 }
 
+template<typename T> 
+std::span<T> Gallery::getOnPage(T* arr, size_t size, int page){
+    if(page < 0 || size <=0) return std::span<T>{};
+    uint16_t pageStart = static_cast<uint16_t>(page) * thumbnailsPerPage;
+    uint16_t pageEnd;
+    if(size - pageStart >= thumbnailsPerPage){
+        pageEnd = pageStart + thumbnailsPerPage;
+    } else {
+        // clamp to provided size
+        pageEnd = size;
+    }
+    LOGF_D("getOnPage: Size: %d, page: %d, thumbnailsPerPage, %d, pageStart: %d, pageEnd: %d\n", 
+        size, page, thumbnailsPerPage, pageStart, pageEnd);
+
+    return std::span{arr + pageStart, arr + pageEnd};
+}
 
 uint16_t Gallery::getBoxX(int i){
   return (i % GRID_MAX_COLS) * GRID_ELEMENT_WIDTH;
@@ -232,15 +244,18 @@ uint16_t Gallery::getBoxY(int i){
 // PageWindow
 template<size_t Radius>
 void Gallery::PageWindow<Radius>::setCurrentPage(int page){
-    if(page == current) return;
+    LOGF_D("PageWindow: Setting current page: new - %d, current - %d\n", page, current);
+    if(page == current) 
+        return;
 
     current = (page + totalPages) % totalPages;
+    LOGF_D("PageWindow: Updated current - %d\n", current);
     updateWindow();
 }
 
 template<size_t Radius>
 bool Gallery::PageWindow<Radius>::contains(const int* arr, int len, int val){
-    for(int i=0; i<count; ++i){
+    for(int i=0; i<len; ++i){
         if(arr[i] == val) return true;
     }
     return false;
@@ -248,42 +263,109 @@ bool Gallery::PageWindow<Radius>::contains(const int* arr, int len, int val){
 
 template<size_t Radius>
 void Gallery::PageWindow<Radius>::updateWindow(){
-    LOGF_D("Updating current page: %d", current);
-    memccpy(oldPages, pages, sizeof(pages), sizeof(pages));
+    LOGF_D("Updating current page: %d\n", current);
+    memcpy(oldPages, pages, sizeof(pages));
     count = 0;
-    for(int offset = -Radius; offset <= Radius; ++offset){
+    int radius = static_cast<int>(Radius);
+    LOGF_D("Radius: %d\n", radius);
+    for(int offset = -radius; offset <= radius; ++offset){
         int page = (current + offset + totalPages) % totalPages;
         pages[count++] = page;
     }
 
-    for(int i=0; i<count; ++i){
-        if(!contains(oldPages, count, pages[i])){
-            onAdded(pages[i]);
-        }
+    if(LOG_LEVEL <= 1){
+        LOG_D("Updated window: ");
+        LOG_ARRAY("%d", pages, windowSize);
+        LOG_D("Old window: ");
+        LOG_ARRAY("%d", oldPages, windowSize);
     }
 
-    for(int i=0; i<count; ++i){
-        if(!contains(pages, count, oldPages[i])){
-            onRemoved(oldPages[i]);
+    LOG_T("Created pages");
+    if(onAdded){
+        bool added=false;
+        for(int i=0; i<count; ++i){
+            if(!contains(oldPages, count, pages[i])){
+                added = true;
+            }
         }
+        onAdded(0);
+    } else LOG_W("PageWindow: onAdded is empty");
+
+    if(onRemoved){
+        for(int i=0; i<count; ++i){
+            if(oldPages[i]==-1) continue;
+            if(!contains(pages, count, oldPages[i])){
+                onRemoved(oldPages[i]);
+            }
+        }
+    } else LOG_W("PageWindow: onRemoved is empty\n");
+}
+
+
+// ----------------
+// ThumbnailManager
+
+Gallery::ThumbnailManager::ThumbnailManager(Gallery &gallery, int totalPages):
+    gallery(gallery),
+    pageWindow(totalPages, 
+        [this](int page)->void {this->loadPage(page);},
+        [this](int page)->void {this->unloadPage(page);}
+){
+    allImageNamesSize = gallery.thumbnails.size();
+    LOGF_T("ThumbnailManager: allImageNamesSize: %d\n", allImageNamesSize);
+
+    allImageNames = std::make_unique<std::string[]>(allImageNamesSize);
+    int i=0;
+    for (auto &thumbnailImage : gallery.thumbnails){
+         allImageNames[i++] = std::string(thumbnailImage->filePath.c_str());
     }
 }
 
-// ThumbnailManager
 void Gallery::ThumbnailManager::unloadPage(int page){
     for(auto& thumb : gallery.getThumbnailsOnPage(page)){
         gallery.rendererCache.unload(thumb->filePath);
     }
+    rebuildLoadQueue();
 }
 
 void Gallery::ThumbnailManager::loadPage(int page){
-    nextThumbnailIndex = 0;
-    currentPageThumbnails = gallery.getThumbnailsOnPage(page);
+    rebuildLoadQueue();
+ }
+
+ void Gallery::ThumbnailManager::rebuildLoadQueue(){
+    loadQueueNextIndex = 0;
+    size_t loadQueueEndIndex = 0;
+    // todo replace with putting pages close to the middle first and farthest last
+    LOG_D("Rebuilding load queue");
+    for (auto &page : pageWindow.getPages()){
+        LOGF_D("Adding page %d to load queue\n", page);
+        if(page < 0 || page >= gallery.pageCount){
+            LOGF_W("ThumbnailManager::loadPage: skipping invalid page %d\n", page);
+            continue;
+        }
+        LOGF_D("loadPage: allImageNamesSize: %d\n", allImageNamesSize);
+        std::span<std::string> currPageFilenames = gallery.getOnPage(allImageNames.get(), allImageNamesSize, page);
+        size_t avail = maxLoadQueueSize - loadQueueEndIndex;
+        if(currPageFilenames.size() > avail){
+            LOGF_W("ThumbnailManager::loadPage: Truncating load queue: have %d, avail %d\n", currPageFilenames.size(), avail);
+        }
+        size_t toCopy = std::min(currPageFilenames.size(), avail);
+        for(int i = 0;i < toCopy; i++){
+            LOGF_T("i: %d, toCopy: %d, span size: %d\n", i, toCopy, currPageFilenames.size());
+            LOGF_T("Load q: %s\n", loadQueue[loadQueueEndIndex+i].c_str());
+            LOGF_T("Curr name: %s\n", currPageFilenames[i].c_str());
+            loadQueue[loadQueueEndIndex+i]= currPageFilenames[i];
+        }
+        loadQueueEndIndex += toCopy;
+    }
+    loadQueueSize = loadQueueEndIndex;
  }
 
 bool Gallery::ThumbnailManager::loadNextThumbnail(){
-    // todo use load queue
-    return false;
+    if(loadQueueNextIndex >= loadQueueSize)
+        return false;
+    gallery.rendererCache.exists(loadQueue[loadQueueNextIndex++]);
+    return true;
  }
 
 

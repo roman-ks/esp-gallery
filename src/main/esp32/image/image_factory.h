@@ -5,7 +5,7 @@
 
 class ImageFactory {
     public:
-        static Image* createImage(const std::string &filePath);
+        static Image* createImage(const std::string &filePath, bool cachable=false);
         static Image* createDownscaledImage(const std::string &filePath);
     private:
         ImageFactory() = default;

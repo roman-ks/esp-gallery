@@ -11,15 +11,15 @@
 #include "../../core/configs.h"
 #include "play_icon_overlay.h"
 
-Image* ImageFactory::createImage(const std::string &filePath) {
+Image* ImageFactory::createImage(const std::string &filePath, bool cachable) {
     std::string ext = getExtension(filePath);
     LOGF_D("Creating image from file %s, ext: %s\n", filePath.c_str(), ext.c_str());
     if (ext == ".png") {
         static PNGDecoder pngDecoder;
-        return new PNGImage(pngDecoder, filePath);
+        return new PNGImage(pngDecoder, filePath, cachable);
     } else if (ext == ".gif"){
         static GIFDecoder gifDecoder;
-        return new GIFImage(gifDecoder, filePath);
+        return new GIFImage(gifDecoder, filePath, cachable);
     }
     // Add more formats as needed
     return nullptr; // Unsupported format
@@ -31,14 +31,16 @@ Image* ImageFactory::createDownscaledImage(const std::string &filePath){
     if (ext == ".png") {
         // todo find a way to share these targets between multiple image types
         static ClippingDrawTarget clippingTarget(nullptr, GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT);
-        static DownscaleDrawTarget downscaleTarget(&clippingTarget, GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT);
+        static DownscaleDrawTarget downscaleTarget(&clippingTarget, 
+            THUMBNAIL_WIDTH_SCALE_FACTOR, THUMBNAIL_HEIGHT_SCALE_FACTOR);
 
         static PNGDecoder pngDecoder(&downscaleTarget, &clippingTarget);
         return new PNGImage(pngDecoder, filePath, true);
     } else if (ext == ".gif"){
         static OverlayDrawTarget overlayTarget(nullptr, PlayIcon24x24, 24, 24, 0, 0);
         static ClippingDrawTarget clippingTarget(&overlayTarget, GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT);
-        static DownscaleDrawTarget downscaleTarget(&clippingTarget, GRID_ELEMENT_WIDTH, GRID_ELEMENT_HEIGHT); 
+        static DownscaleDrawTarget downscaleTarget(&clippingTarget, 
+            THUMBNAIL_WIDTH_SCALE_FACTOR, THUMBNAIL_HEIGHT_SCALE_FACTOR); 
 
         static GIFDecoder gifDecoder(&downscaleTarget, &overlayTarget);
         return new GIFImage(gifDecoder, filePath, true);

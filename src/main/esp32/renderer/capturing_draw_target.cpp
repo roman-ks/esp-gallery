@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <cstring>
 #include "../../core/configs.h"
+#define LOG_LEVEL 1
+#include "../log.h"
 
 CapturingDrawTarget::CapturingDrawTarget(IDrawTarget* delegate): DelegatingDrawTarget(delegate){
     m_width = m_height = m_windowX = m_windowY =m_windowW = m_windowH = m_cursorX = m_cursorY = 0;
@@ -13,14 +15,10 @@ CapturingDrawTarget::CapturingDrawTarget(IDrawTarget* delegate): DelegatingDrawT
     if (m_pixels) std::memset(m_pixels, 0, totalPixels * sizeof(uint16_t));
 }
 
-CapturingDrawTarget::~CapturingDrawTarget() {
-    if (m_pixels) free(m_pixels);
-}
-
 void CapturingDrawTarget::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if (x + w > m_width) m_width = x + w;
-    // h is an offset from y, so for one line h will be 0, but m_height has to be count of rows so do +1 to go from offset to count
-    if (y + h + 1 > m_height) m_height = y + h+1;
+    if (y + h > m_height) m_height = y + h;
+    LOGF_T("y=%d, h=%d, m_height=%d\n", y,h, m_height);
 
     m_windowX = x;
     m_windowY = y;

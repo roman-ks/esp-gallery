@@ -8,7 +8,7 @@
 class CapturingDrawTarget : public DelegatingDrawTarget {
 public:
     CapturingDrawTarget(IDrawTarget* delegate);
-    ~CapturingDrawTarget();
+    ~CapturingDrawTarget()=default;
 
     virtual void setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) override;
     virtual void pushPixels(const void *pixels, uint32_t count) override;

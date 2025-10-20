@@ -13,7 +13,7 @@ class Image {
         Image(Decoder &decoder, std::string filePath) 
             : Image(decoder, filePath, false) {}
         Image(Decoder &decoder, std::string filePath, bool cachable): 
-            decoder(decoder), filePath(filePath), id(instanceCounter++),cachable(cachable) {} 
+            decoder(decoder), filePath(filePath), id(++instanceCounter),cachable(cachable) {} 
         virtual void render(Renderer &rendered) const = 0;
 
         virtual Decoder& getDecoder() const {

@@ -2,11 +2,9 @@
 #define LOG_LEVEL 2
 #include "../log.h"
 #include <cstdLib>
-#include "../../core/configs.h"
-
 
 RendererCache::RendererCache(fs::FS &fileSys):fileSys(fileSys), cache(), written(){
-    createDir(std::string("/c"));
+    createDir(cacheRootPath);
 }
 
 void RendererCache::createDir(const std::string &filepath){
@@ -54,14 +52,13 @@ void RendererCache::put(const std::string &key, std::unique_ptr<PixelsHolder> va
 void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHolder){
     if(written.contains(key))
         return;
+    std::string binFilename = cacheRootPath + key+ ".b";
 
-    std::string binFilename = std::string("/c")+key+".b";
-
-    if(fileSys.exists(binFilename.c_str()) /*&& fileSys.exists(mdFilename.c_str())*/){
+    if(fileSys.exists(binFilename.c_str())){
         written.insert(std::string(key));
         return;        
     }
-    std::string tmpFilename = std::string("/c/tmp.b");
+    static std::string tmpFilename = cacheRootPath+"/tmp.b";
 
 
     LOGF_D("Starting to write %s to write %d pixels\n", binFilename.c_str(), pixelsHolder.pixels.size());
@@ -114,7 +111,7 @@ void RendererCache::handleInvalidWrite(fs::File &file, std::string &filename){
 
 std::unique_ptr<PixelsHolder> RendererCache::load(const std::string &key){
     LOGF_D("Loading for key %s\n", key.c_str());
-    std::string binFilename = std::string("/c")+key+".b";
+    std::string binFilename = cacheRootPath + key + ".b";
 
     if(!fileSys.exists(binFilename.c_str())){
         LOGF_I("Cache file %s is missing\n", binFilename.c_str());
@@ -154,4 +151,8 @@ std::unique_ptr<PixelsHolder> RendererCache::load(const std::string &key){
     LOGF_D("Read %s in %dms (%.1f B/s)\n", binFilename.c_str(), end-start, speed);
 
     return std::make_unique<PixelsHolder>(w,h, std::move(pixels));
+}
+
+void RendererCache::unload(const std::string &key){
+    cache.erase(key);
 }

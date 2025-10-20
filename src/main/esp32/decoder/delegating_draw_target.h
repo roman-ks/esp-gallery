@@ -6,6 +6,10 @@
 class DelegatingDrawTarget: public IDrawTarget {
     public:
         DelegatingDrawTarget(IDrawTarget *delegate): delegate(delegate){}
+
+        void setDelegate(IDrawTarget *newDelegate){
+            delegate = newDelegate;
+        }
     protected:
         IDrawTarget *delegate;
 };

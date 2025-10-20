@@ -1,18 +1,13 @@
 #include "gif_decoder.h"
 
-GIFDecoder::GIFDecoder(){
-    GIFDecoder::gif.begin(BIG_ENDIAN_PIXELS);
-}
-
-GIFDecoder::GIFDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories): AdvancableDecoder(delegatingFactories){
+GIFDecoder::GIFDecoder(DelegatingDrawTarget *firstDelegate, DelegatingDrawTarget *lastDelegate): 
+  AdvancableDecoder(firstDelegate, lastDelegate) {
     GIFDecoder::gif.begin(BIG_ENDIAN_PIXELS);
 }
 
 void GIFDecoder::decode(uint8_t *fileBytes, size_t bytesCount, IDrawTarget &iDrawTarget) {
-  // if(decodedPath != std::string(filepath)){
   gif.open(fileBytes, bytesCount, &GIFDecoder::GIFDraw);
-    // decodedPath = std::string(filepath);
-  // }
+
   advance(iDrawTarget);
 }
 

@@ -7,21 +7,18 @@
 #include "i_draw_target.h"
 #include "delegating_draw_target.h"
 
-using DelegatingDrawTargetFactory = std::function<DelegatingDrawTarget*(IDrawTarget*)>;
-
 class Decoder {
     public:
-        Decoder():delegatingFactories(), createdDelegates(){}
-        Decoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories)
-            :delegatingFactories(delegatingFactories), createdDelegates(){}
+        Decoder(): firstDelegate(nullptr), lastDelegate(nullptr){}
+        Decoder(DelegatingDrawTarget *firstDelegate, DelegatingDrawTarget *lastDelegate)
+            :firstDelegate(firstDelegate),lastDelegate(lastDelegate){}
         virtual ~Decoder();
 
         virtual void decode(uint8_t *fileBytes, size_t bytesCount, IDrawTarget &iDrawTarget) = 0;
         IDrawTarget* wrapWithDelegates(IDrawTarget *target); 
         void destroyWrappingDelegates();      
     protected:
-        std::vector<DelegatingDrawTargetFactory> delegatingFactories;
-        std::vector<void *> createdDelegates;
+        DelegatingDrawTarget *firstDelegate, *lastDelegate;
 };
 
 #endif

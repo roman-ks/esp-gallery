@@ -7,18 +7,14 @@ Decoder::~Decoder(){
 }
 
 IDrawTarget* Decoder::wrapWithDelegates(IDrawTarget *target){
-    for(DelegatingDrawTargetFactory factory: delegatingFactories){
-        DelegatingDrawTarget *wrappingDelegate = factory(target);
-        createdDelegates.push_back(wrappingDelegate);
-        target = wrappingDelegate;
-    }
-    return target;
+    if(lastDelegate == nullptr)
+        return target;
+    lastDelegate->setDelegate(target);
+    return firstDelegate;
 }   
 
 void Decoder::destroyWrappingDelegates(){
-    for(void *delegate: createdDelegates){
-        free(delegate);
-    }
-    createdDelegates.clear();
+    if(lastDelegate != nullptr)
+        lastDelegate->setDelegate(nullptr);
 }    
 

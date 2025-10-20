@@ -68,7 +68,7 @@ void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
 
         cache.put(image.filePath, std::move(capturingDrawTarget.getCaptured()));
         PixelsHolder &cached = cache.get(image.filePath);
-        LOGF_D("Cached %s: %d (w:%d, h%d)\n",image.filePath, id, cached.width, cached.height);
+        LOGF_D("Cached %s: %d (w:%d, h%d)\n",image.filePath.c_str(), id, cached.width, cached.height);
     }
 }
 
@@ -128,13 +128,13 @@ size_t TFTRenderer::readImage(const Image &image){
 // iDrawTarget
 
 void TFTRenderer::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
-    LOGF_D("Window addr (%d,%d), (%d,%d)\n", x,y,w,h);
+    LOGF_T("Window addr (%d,%d), (%d,%d)\n", x,y,w,h);
 
     tft.setAddrWindow(x,y, w, h);
 }
 
 void TFTRenderer::pushPixels(const void *pixels, uint32_t count){
-    LOGF_D("Pushing pixels %d\n", count);
+    LOGF_T("Pushing pixels %d\n", count);
 
     tft.pushPixels(pixels, count);
 }    

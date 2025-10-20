@@ -6,12 +6,14 @@
 #include <span>
 #include <memory>
 #include <unordered_set>
+#include "../../core/configs.h"
 
 class RendererCache {
     private:
         std::unordered_map<std::string, std::unique_ptr<PixelsHolder>> cache;
         std::unordered_set<std::string> written;
         fs::FS &fileSys;
+        const std::string cacheRootPath = std::string(CACHE_FOLDER_PATH);
     public:
         RendererCache(fs::FS &fileSys);
         bool exists(const std::string &key);
@@ -21,6 +23,8 @@ class RendererCache {
         void handleInvalidWrite(fs::File &file, std::string &filename);
         std::unique_ptr<PixelsHolder> load(const std::string &key);
         bool loadAndCache(const std::string &key);
+
+        void unload(const std::string &key);
 
         void createDir(const std::string &filepath);
 

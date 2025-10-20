@@ -2,7 +2,7 @@
 
 #include "delegating_draw_target.h"
 #include <cstdint>
-#include <vector>
+#include <memory>
 
 class DownscaleDrawTarget : public DelegatingDrawTarget {
 public:
@@ -26,5 +26,6 @@ private:
     uint16_t m_cursorY;
 
     // Buffer for downscaled pixels before delegation
-    std::vector<uint16_t> m_downBuf;
+    std::unique_ptr<uint16_t[]> m_downBuf;
+    size_t m_downBufCount;
 };

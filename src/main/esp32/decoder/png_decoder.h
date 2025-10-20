@@ -9,8 +9,9 @@
 
 class PNGDecoder : public Decoder {
     public:
-        PNGDecoder() = default;
-        PNGDecoder(std::vector<DelegatingDrawTargetFactory> &delegatingFactories): Decoder(delegatingFactories){}
+        PNGDecoder(): PNGDecoder(nullptr, nullptr) {}
+        PNGDecoder(DelegatingDrawTarget *firstDelegate, DelegatingDrawTarget *lastDelegate): 
+            Decoder(firstDelegate, lastDelegate){}
 
         virtual ~PNGDecoder()=default;
 

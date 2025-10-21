@@ -25,9 +25,12 @@ void DownscaleDrawTarget::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint
     m_cursorX = 0;
     m_cursorY = 0;
 
-    // Downscaled window
-    uint16_t dw = w / m_widthScale;
-    uint16_t dh = h / m_heightScale;
+    // Downscaled window (use ceiling division so we pick the correct number
+    // of samples when window dimensions are not exact multiples of the
+    // scale factors). For example, a 16-wide window with scale 3 should
+    // produce 6 pixels: indices 0,3,6,9,12,15.
+    uint16_t dw = (w + m_widthScale - 1) / m_widthScale;
+    uint16_t dh = (h + m_heightScale - 1) / m_heightScale;
 
     delegate->setAddrWindow(x / m_widthScale, y / m_heightScale, dw, dh);
 
@@ -39,11 +42,11 @@ void DownscaleDrawTarget::pushPixels(const void *pixels, uint32_t count) {
     const uint16_t* src = static_cast<const uint16_t*>(pixels);
 
     for (uint32_t i = 0; i < count; ++i) {
-        // Absolute source position
-        uint16_t absX = m_windowX + m_cursorX;
-        uint16_t absY = m_windowY + m_cursorY;
-
-        if ((absX % m_widthScale == 0) && (absY % m_heightScale == 0)) {
+        // Use window-relative cursor position so downscaling blocks align to the
+        // window origin rather than the absolute framebuffer origin. Using
+        // absolute coordinates caused a grid artifact when window offsets
+        // weren't multiples of the scale factors.
+        if ((m_cursorX % m_widthScale == 0) && (m_cursorY % m_heightScale == 0)) {
             m_downBuf[m_downBufCount++] = src[i];
         }
 

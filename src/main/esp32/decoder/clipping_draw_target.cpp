@@ -29,7 +29,7 @@ void ClippingDrawTarget::pushPixels(const void* pixelsPtr, uint32_t count) {
     uint16_t ix0 = std::max<uint16_t>(m_windowX, 0);
     uint16_t iy0 = std::max<uint16_t>(m_windowY, 0);
     uint16_t ix1 = std::min<uint16_t>(m_windowX + m_windowW, m_clipW);
-    uint16_t iy1 = std::min<uint16_t>(m_windowY + m_windowH + 1, m_clipH);
+    uint16_t iy1 = std::min<uint16_t>(m_windowY + m_windowH, m_clipH);
 
     if (ix0 >= ix1 || iy0 >= iy1) {
         // completely outside, nothing to draw
@@ -51,6 +51,6 @@ void ClippingDrawTarget::pushPixels(const void* pixelsPtr, uint32_t count) {
     }
 
     // push clipped window to delegate
-    delegate->setAddrWindow(ix0, iy0, drawW, drawH - 1); // -1 because height is offset
+    delegate->setAddrWindow(ix0, iy0, drawW, drawH); // -1 because height is offset
     delegate->pushPixels(m_outBuffer, drawW * drawH);
 }

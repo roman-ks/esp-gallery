@@ -7,7 +7,7 @@
 #include "../decoder/clipping_draw_target.h"
 #include "png_image.h"
 #include "gif_image.h"
-#define LOG_LEVEL 1
+#define LOG_LEVEL 2
 #include "../log.h"
 #include "../../core/configs.h"
 #include "play_icon_overlay.h"

@@ -66,9 +66,14 @@ void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
         image.getDecoder().decode(fileBytes, imgBytes, capturingDrawTarget);
         tft.endWrite(); // The TFT chip select is locked low
 
-        cache.put(image.filePath, std::move(capturingDrawTarget.getCaptured()));
-        PixelsHolder &cached = cache.get(image.filePath);
-        LOGF_D("Cached %s: %d (w:%d, h%d)\n",image.filePath.c_str(), id, cached.width, cached.height);
+        auto captured = capturingDrawTarget.getCaptured();
+        if (captured) {
+            cache.put(image.filePath, std::move(captured));
+            PixelsHolder &cached = cache.get(image.filePath);
+            LOGF_D("Cached %s: %d (w:%d, h%d)\n",image.filePath.c_str(), id, cached.width, cached.height);
+        } else {
+            LOGF_W("TFTRenderer: failed to capture image %s, skipping cache\n", image.filePath.c_str());
+        }
     }
 }
 

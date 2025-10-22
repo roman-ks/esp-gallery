@@ -12,7 +12,7 @@ void RendererCache::createDir(const std::string &filepath){
     if (fileSys.mkdir(filepath.c_str())) {
         LOG_D("Dir created");
     } else {
-        LOG_D("mkdir failed");
+        LOG_W("mkdir failed");
     }
 }
 
@@ -29,7 +29,7 @@ bool RendererCache::loadAndCache(const std::string &key){
     if(loaded == nullptr){
         return false;
     } else {
-        LOGF_I("loaded %s from FS in %dms\n", key.c_str(), millis()-start);
+        LOGF_D("loaded %s from FS in %dms\n", key.c_str(), millis()-start);
         cache[key] = std::move(loaded);
         return true;
     }
@@ -44,7 +44,7 @@ void RendererCache::put(const std::string &key, std::unique_ptr<PixelsHolder> va
 
     uint32_t start = millis();
     if (write(key, *cache[key]))
-        LOGF_I("written %s to FS in %dms\n", key.c_str(), millis()-start);
+        LOGF_D("written %s to FS in %dms\n", key.c_str(), millis()-start);
     else
         LOGF_I("Skipped write for %s\n", key.c_str());
 }

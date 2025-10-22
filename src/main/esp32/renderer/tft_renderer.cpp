@@ -51,7 +51,7 @@ void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
     uint16_t id = image.id;
     if (cache.exists(image.filePath)) {
         PixelsHolder &cached = cache.get(image.filePath);
-        LOGF_D("Using cached%s: %d(w:%d, h%d, count: %d), \n",image.filePath, id, cached.width, cached.height, cached.pixels.size());
+        LOGF_D("Using cached %s: %d(w:%d, h%d, count: %d) \n",image.filePath.c_str(), id, cached.width, cached.height, cached.pixels.size());
         
         tft.startWrite(); // The TFT chip select is locked low
         delegate.setAddrWindow(0,0, cached.width, cached.height);

@@ -38,13 +38,13 @@ void Gallery::init() {
         if(img){
             img->setPosition(0,0); // todo decide where to set position
             images.push_back(img);
-        }
+        } else continue;
 
         start = millis();
         Image *thumbnail = ImageFactory::createDownscaledImage(std::string(filename.c_str()));
         uint32_t thumbCreateTime = millis()-start;
         if(thumbnail){
-          thumbnails.push_back(thumbnail);
+            thumbnails.push_back(thumbnail);
         }
         // LOGF_T("File: %s opened in %dms (imgCreate: %dms, thumbCreate: %dms)\n", 
         //       filename.c_str(), openTime, imgCreateTime, thumbCreateTime);

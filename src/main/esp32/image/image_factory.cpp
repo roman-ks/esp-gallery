@@ -15,7 +15,10 @@
 Image* ImageFactory::createImage(const std::string &filePath, bool cachable) {
     std::string ext = getExtension(filePath);
     LOGF_D("Creating image from file %s, ext: %s\n", filePath.c_str(), ext.c_str());
-    if (ext == ".png") {
+    if (ext == ".jpg"){
+        static JPGDecoder jpgDecoder;
+        return new PNGImage(jpgDecoder, filePath, cachable);
+    } else if(ext == ".png") {
         static PNGDecoder pngDecoder;
         return new PNGImage(pngDecoder, filePath, cachable);
     } else if (ext == ".gif"){

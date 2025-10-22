@@ -1,6 +1,6 @@
 #include "main_controller.h"
 
-#define LOG_LEVEL 1
+#define LOG_LEVEL 2
 #include "log.h"
 #include "pins_config.h"
 

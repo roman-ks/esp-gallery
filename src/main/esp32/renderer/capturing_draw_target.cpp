@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <cstring>
 #include "../../core/configs.h"
-#define LOG_LEVEL 1
+#define LOG_LEVEL 2
 #include "../log.h"
 
 CapturingDrawTarget::CapturingDrawTarget(IDrawTarget* delegate): DelegatingDrawTarget(delegate){

@@ -1,4 +1,7 @@
 #include "gif_decoder.h"
+#include "../../core/configs.h"
+#define LOG_LEVEL 2
+#include "../log.h"
 
 GIFDecoder::GIFDecoder(DelegatingDrawTarget *firstDelegate, DelegatingDrawTarget *lastDelegate): 
   AdvancableDecoder(firstDelegate, lastDelegate) {
@@ -8,13 +11,24 @@ GIFDecoder::GIFDecoder(DelegatingDrawTarget *firstDelegate, DelegatingDrawTarget
 void GIFDecoder::decode(uint8_t *fileBytes, size_t bytesCount, IDrawTarget &iDrawTarget) {
   gif.open(fileBytes, bytesCount, &GIFDecoder::GIFDraw);
 
-  advance(iDrawTarget);
+  valid = false;
+  LOGF_D("image specs: (%d x %d)\n",gif.getFrameWidth(), gif.getFrameHeight());
+  if (gif.getFrameWidth() > MAX_IMAGE_WIDTH) {
+      LOG_I("Image too wide for the screen!");
+  } else if (gif.getFrameHeight() > MAX_IMAGE_HEIGHT) {
+      LOG_I("Image too high for the screen!");
+  } else {
+      valid = true;
+      advance(iDrawTarget);
+  }
 }
 
 void GIFDecoder::advance(IDrawTarget &iDrawTarget){
-  setIDrawTarget(wrapWithDelegates(&iDrawTarget));
-  gif.playFrame(true, NULL);
-  destroyWrappingDelegates();
+  if(valid){
+    setIDrawTarget(wrapWithDelegates(&iDrawTarget));
+    gif.playFrame(true, NULL);
+    destroyWrappingDelegates();
+  }
 }
 
 // Draw a line of image directly on the LCD

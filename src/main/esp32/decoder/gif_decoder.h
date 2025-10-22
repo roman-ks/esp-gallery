@@ -29,6 +29,7 @@ class GIFDecoder: public AdvancableDecoder {
         inline static AnimatedGIF gif = AnimatedGIF();
         inline static uint16_t usTemp[1][BUFFER_SIZE];    // Global to support DMA use
         inline static bool dmaBuf = 0;
+        inline static bool valid = false; 
         // std::string decodedPath;
 
 };

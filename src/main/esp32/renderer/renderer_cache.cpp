@@ -43,20 +43,23 @@ void RendererCache::put(const std::string &key, std::unique_ptr<PixelsHolder> va
     cache[std::string(key)] = std::move(value);
 
     uint32_t start = millis();
-    write(key, *cache[key]);
-    LOGF_I("written %s to FS in %dms\n", key.c_str(), millis()-start);
-
+    if (write(key, *cache[key]))
+        LOGF_I("written %s to FS in %dms\n", key.c_str(), millis()-start);
+    else
+        LOGF_I("Skipped write for %s\n", key.c_str());
 }
 
 
-void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHolder){
+bool RendererCache::write(const std::string &key, const PixelsHolder &pixelsHolder){
+    if(pixelsHolder.height == 0 || pixelsHolder.width == 0)
+        return false;
     if(written.contains(key))
-        return;
+        return false;
     std::string binFilename = cacheRootPath + key+ ".b";
 
     if(fileSys.exists(binFilename.c_str())){
         written.insert(std::string(key));
-        return;        
+        return false;        
     }
     static std::string tmpFilename = cacheRootPath+"/tmp.b";
 
@@ -74,23 +77,14 @@ void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHold
     if(res != 2){
         LOGF_D("Invalid write size %d, expected: %d\n", res, 2);
         handleInvalidWrite(file, binFilename);
-        return;
-    }
-    mdBuf[0]=pixelsHolder.height & 0xff;
-    mdBuf[1]= pixelsHolder.height >> 8;
-    LOGF_D("Writing 0x%x 0x%x\n", mdBuf[0], mdBuf[1]);
-    res = file.write(mdBuf, sizeof(mdBuf));
-    if(res != 2){
-        LOGF_D("Invalid write size %d, expected: %d\n", res, 2);
-        handleInvalidWrite(file, binFilename);
-        return;
+        return false;
     }
     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(pixelsHolder.pixels.data());
     res = file.write(bytes, pixelsHolder.pixels.size()*sizeof(uint16_t));
     if(res != pixelsHolder.pixels.size()*sizeof(uint16_t)){
         LOGF_D("Invalid write size %d, expected: %d\n", res, pixelsHolder.pixels.size()*sizeof(uint16_t));
         handleInvalidWrite(file, binFilename);
-        return;
+        return false;
     }
     file.close();
 
@@ -100,6 +94,7 @@ void RendererCache::write(const std::string &key, const PixelsHolder &pixelsHold
     LOGF_D("Written %s in %dms (%.1f B/s)\n", binFilename.c_str(), end-start, speed);
 
     written.insert(std::string(key));
+    return true;
 }
 
 void RendererCache::handleInvalidWrite(fs::File &file, std::string &filename){
@@ -134,7 +129,7 @@ std::unique_ptr<PixelsHolder> RendererCache::load(const std::string &key){
     uint16_t h = mdBuf[1]<<8 | mdBuf[0];
     LOGF_D("W: %d, H: %d\n", w,h);
 
-    if(w > MAX_IMAGE_WIDTH || h > MAX_IMAGE_HEIGHT){
+    if(w > MAX_IMAGE_WIDTH || h > MAX_IMAGE_HEIGHT || w == 0|| h == 0){
         // invalid cached item delete to be retried
         file.close();
         bool removed = fileSys.remove(binFilename.c_str());

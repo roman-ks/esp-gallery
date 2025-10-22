@@ -134,8 +134,10 @@ void TFTRenderer::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
 }
 
 void TFTRenderer::pushPixels(const void *pixels, uint32_t count){
-    LOGF_T("Pushing pixels %d\n", count);
-
+    LOGF_T("Pushing %d pixels: \n", count);
+    if(LOG_LEVEL ==0 ){
+        LOG_ARRAY("0x%x", static_cast<const uint16_t*>(pixels), count);
+    }
     tft.pushPixels(pixels, count);
 }    
 

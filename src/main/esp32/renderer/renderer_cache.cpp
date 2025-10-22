@@ -70,10 +70,21 @@ bool RendererCache::write(const std::string &key, const PixelsHolder &pixelsHold
 
     fs::File file = fileSys.open(binFilename.c_str(), FILE_WRITE, true);
     byte mdBuf[2];
+    // write width as two bytes
     mdBuf[0]=pixelsHolder.width & 0xff;
     mdBuf[1]= pixelsHolder.width >> 8;
     LOGF_D("Writing 0x%x 0x%x\n", mdBuf[0], mdBuf[1]);
     size_t res = file.write(mdBuf, sizeof(mdBuf));
+    if(res != 2){
+        LOGF_D("Invalid write size %d, expected: %d\n", res, 2);
+        handleInvalidWrite(file, binFilename);
+        return false;
+    }
+    // write height as two bytes
+    mdBuf[0]=pixelsHolder.height & 0xff;
+    mdBuf[1]= pixelsHolder.height >> 8;
+    LOGF_D("Writing 0x%x 0x%x\n", mdBuf[0], mdBuf[1]);
+    res = file.write(mdBuf, sizeof(mdBuf));
     if(res != 2){
         LOGF_D("Invalid write size %d, expected: %d\n", res, 2);
         handleInvalidWrite(file, binFilename);

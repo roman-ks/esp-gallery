@@ -1,5 +1,6 @@
 #include "gallery.h"
 #include "image/image_factory.h"
+#include <algorithm>
 #define LOG_LEVEL 1
 #include "log.h"
 
@@ -228,17 +229,13 @@ std::span<Image*> Gallery::getThumbnailsOnPage(uint8_t page){
 
 template<typename T> 
 std::span<T> Gallery::getOnPage(T* arr, size_t size, int page){
-    if(page < 0 || size <=0) return std::span<T>{};
-    uint16_t pageStart = static_cast<uint16_t>(page) * thumbnailsPerPage;
-    uint16_t pageEnd;
-    if(size - pageStart >= thumbnailsPerPage){
-        pageEnd = pageStart + thumbnailsPerPage;
-    } else {
-        // clamp to provided size
-        pageEnd = size;
-    }
+    if(page < 0 || size == 0) return std::span<T>{};
+    // use size_t to avoid unsigned underflow and check bounds
+    size_t pageStart = static_cast<size_t>(page) * static_cast<size_t>(thumbnailsPerPage);
+    if(pageStart >= size) return std::span<T>{};
+    size_t pageEnd = std::min(size, pageStart + static_cast<size_t>(thumbnailsPerPage));
     LOGF_D("getOnPage: Size: %d, page: %d, thumbnailsPerPage, %d, pageStart: %d, pageEnd: %d\n", 
-        size, page, thumbnailsPerPage, pageStart, pageEnd);
+        size, page, thumbnailsPerPage, static_cast<int>(pageStart), static_cast<int>(pageEnd));
 
     return std::span{arr + pageStart, arr + pageEnd};
 }

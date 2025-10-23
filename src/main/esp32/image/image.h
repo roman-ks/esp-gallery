@@ -26,6 +26,8 @@ class Image {
         const std::string filePath;
         uint16_t xPos = 0;
         uint16_t yPos = 0;
+        uint16_t w = 0;
+        uint16_t h = 0;
         const uint16_t id;
         const bool cachable;
     protected:

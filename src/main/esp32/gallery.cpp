@@ -9,7 +9,8 @@ Gallery::~Gallery() {
 
 void Gallery::init() {
     LOG_D("Gallery init");
-    Image *splashImg = ImageFactory::createImage(SPLACH_IMAGE_PATH, true);
+    std::string ext;
+    Image *splashImg = ImageFactory::createImage(SPLACH_IMAGE_PATH, &ext, true);
     splashImg->setPosition(0,0);
     splashImg->render(renderer);
     LOG_D("Splash screen shown");
@@ -30,24 +31,46 @@ void Gallery::init() {
         if(!filename || filename.isEmpty()){
             break;
         }
-        uint32_t openTime = millis()-start;
+        uint32_t filenameTime = millis()-start;
         
         start = millis();
-        Image *img = ImageFactory::createImage(std::string(filename.c_str()));
+        ext = "";
+        Image *img = ImageFactory::createImage(std::string(filename.c_str()), &ext);
         uint32_t imgCreateTime = millis()-start;
-        if(img){
-            img->setPosition(0,0); // todo decide where to set position
-            images.push_back(img);
-        } else continue;
+        uint16_t w=0,h=0;
+
+        if(!img) continue;
 
         start = millis();
-        Image *thumbnail = ImageFactory::createDownscaledImage(std::string(filename.c_str()));
-        uint32_t thumbCreateTime = millis()-start;
-        if(thumbnail){
-            thumbnails.push_back(thumbnail);
+        if(ImageFactory::getImageSize(fileSys, std::string(filename.c_str()), ext, &w, &h))
+            LOGF_D("%s: %dx%d\n", filename.c_str(), w, h);
+        else
+            LOG_D("Couldn't get size");
+        uint32_t imgSizeTime = millis()-start;
+
+        if(w && h){
+            img->setPosition((MAX_IMAGE_WIDTH-w)/2,(MAX_IMAGE_HEIGHT-h)/2); 
+            LOGF_T("Position: x=%d, y=%d\n", img->xPos, img->yPos);
+        }else{
+            img->setPosition((MAX_IMAGE_WIDTH-w)/2,(MAX_IMAGE_HEIGHT-h)/2); 
         }
-        // LOGF_T("File: %s opened in %dms (imgCreate: %dms, thumbCreate: %dms)\n", 
-        //       filename.c_str(), openTime, imgCreateTime, thumbCreateTime);
+
+
+        start = millis();
+        Image *thumbnail = ImageFactory::createDownscaledImage(std::string(filename.c_str()), &ext);
+
+        uint32_t thumbCreateTime = millis()-start;
+        if(!thumbnail) continue;
+        
+        img->w=w;
+        img->h=h;
+        images.push_back(img);
+        thumbnail->w=w;
+        thumbnail->h=h;
+        thumbnails.push_back(thumbnail);
+        
+        LOGF_T("File: %s filename %lums (imgCreate: %lums, thumbCreate: %lums, size:%lums)\n", 
+               filename.c_str(), filenameTime, imgCreateTime, thumbCreateTime, imgSizeTime);
     }
     pageCount = thumbnails.size()/thumbnailsPerPage + (thumbnails.size()%thumbnailsPerPage==0 ? 0: 1);
     
@@ -215,7 +238,12 @@ void Gallery::showThumbnail(int i){
 
 void Gallery::showThumbnail(Image* thumbnail, uint8_t x, uint8_t y){
     LOGF_T("Rendering thumbnail %s\n", thumbnail->filePath.c_str());
-    thumbnail->setPosition(x, y);
+    thumbnail->setPosition(x,y);
+    // todo center thumbnail in its grid element,but still clip to the element box
+    // rn some part is outside of the box
+    // thumbnail->setPosition(
+    //     x + ((MAX_IMAGE_WIDTH - thumbnail->w)/2)/THUMBNAIL_WIDTH_SCALE_FACTOR, 
+    //     y + ((MAX_IMAGE_HEIGHT - thumbnail->h)/2)/THUMBNAIL_HEIGHT_SCALE_FACTOR);
     thumbnail->render(renderer);
 }
 

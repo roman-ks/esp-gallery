@@ -1,7 +1,7 @@
 #include "gallery.h"
 #include "image/image_factory.h"
 #include <algorithm>
-#define LOG_LEVEL 1
+#define LOG_LEVEL 3
 #include "log.h"
 
 Gallery::~Gallery() {
@@ -52,7 +52,7 @@ void Gallery::init() {
             img->setPosition((MAX_IMAGE_WIDTH-w)/2,(MAX_IMAGE_HEIGHT-h)/2); 
             LOGF_T("Position: x=%d, y=%d\n", img->xPos, img->yPos);
         }else{
-            img->setPosition((MAX_IMAGE_WIDTH-w)/2,(MAX_IMAGE_HEIGHT-h)/2); 
+            img->setPosition(0, 0); 
         }
 
 

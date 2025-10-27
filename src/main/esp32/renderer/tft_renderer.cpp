@@ -25,7 +25,6 @@ void TFTRenderer::reset() {
 }
 
 void TFTRenderer::render(const GIFImage &gifImage) {
-    static uint16_t lastRenderedId = 0;
     OffsettingDrawTarget offsettingDrawTarget(this, gifImage.xPos, gifImage.yPos);
 
     uint16_t id = gifImage.id;
@@ -78,7 +77,6 @@ void TFTRenderer::renderCachable(IDrawTarget &delegate, const Image &image){
 }
 
 void TFTRenderer::render(const PNGImage &pngImage) {
-    static uint16_t lastRenderedId = 0;
     if(lastRenderedId == pngImage.id)
         return;
     OffsettingDrawTarget offsettingDrawTarget(this, pngImage.xPos, pngImage.yPos);

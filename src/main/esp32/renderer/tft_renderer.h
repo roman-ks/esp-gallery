@@ -31,6 +31,7 @@ class TFTRenderer : public Renderer {
         RendererCache &cache;
         fs::FS &fileSys;
         uint8_t *fileBytes = nullptr;
+        uint16_t lastRenderedId = 0;
 
         void renderCachable(IDrawTarget &delegate, const Image &image);
         size_t readImage(const Image &image);
